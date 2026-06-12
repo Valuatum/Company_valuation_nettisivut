@@ -1,0 +1,101 @@
+{
+  "siteId": "valuatum-arvonmaaritys",
+  "name": "Valuatum Arvonmääritys",
+  "defaultLocale": "fi",
+  "theme": {
+    "green": "#3D9E72",
+    "greenDeep": "#2A7452",
+    "greenMist": "#E3F5EE",
+    "forest": "#1B3028",
+    "charcoal": "#1A2420",
+    "lime": "#C8FF31",
+    "gold": "#C8963E"
+  },
+  "navLinks": [
+    {
+      "id": "nav-esimerkit",
+      "label": "Esimerkit",
+      "href": "#esimerkit"
+    },
+    {
+      "id": "nav-sisalto",
+      "label": "Sisältö",
+      "href": "#sisalto"
+    },
+    {
+      "id": "nav-hinnoittelu",
+      "label": "Hinnoittelu",
+      "href": "#hinnoittelu"
+    },
+    {
+      "id": "nav-menetelma",
+      "label": "Menetelmä",
+      "href": "#menetelma"
+    },
+    {
+      "id": "nav-ukk",
+      "label": "UKK",
+      "href": "#ukk"
+    }
+  ],
+  "navCta": {
+    "label": "Tilaa raportti",
+    "href": "#tilaa"
+  },
+  "footerLinks": [
+    {
+      "id": "foot-esimerkit",
+      "label": "Esimerkkiraportit",
+      "href": "#esimerkit"
+    },
+    {
+      "id": "foot-sisalto",
+      "label": "Raportin sisältö",
+      "href": "#sisalto"
+    },
+    {
+      "id": "foot-hinnoittelu",
+      "label": "Hinnoittelu",
+      "href": "#hinnoittelu"
+    },
+    {
+      "id": "foot-menetelma",
+      "label": "Menetelmä",
+      "href": "#menetelma"
+    },
+    {
+      "id": "foot-ukk",
+      "label": "Usein kysytyt kysymykset",
+      "href": "#ukk"
+    },
+    {
+      "id": "foot-valuatum",
+      "label": "Valuatum.com",
+      "href": "https://www.valuatum.com"
+    }
+  ],
+  "footerTagline": "AI-avusteinen arvonmääritysraportti suomalaisille yrityksille. Rakennettu Valuatumin 25+ vuoden arvonmääritys-, credit risk- ja equity research -osaamisen päälle.",
+  "footerDisclaimer": "Raportti on analyysiraportti päätöksenteon tueksi. Se ei ole tilintarkastus, fairness opinion, sijoitusneuvonta tai oikeudellinen lausunto.",
+  "contactEmail": "company-valuation@valuatum.com",
+  "copyright": "© 2026 Valuatum Oy. Kaikki oikeudet pidätetään.",
+  "editor": {
+    "supportedLocales": [
+      "fi"
+    ],
+    "supportedPageKeys": [
+      "home"
+    ],
+    "supportedSectionTypes": [
+      "hero",
+      "sampleReports",
+      "featureGrid",
+      "comparison",
+      "useCases",
+      "howItWorks",
+      "pricing",
+      "methodology",
+      "faq",
+      "finalCta"
+    ]
+  }
+}

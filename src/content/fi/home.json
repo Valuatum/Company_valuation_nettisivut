@@ -1,0 +1,512 @@
+{
+  "key": "home",
+  "locale": "fi",
+  "route": "/",
+  "metadata": {
+    "title": "AI-arvonmääritysraportti suomalaiselle yritykselle | Valuatum",
+    "description": "Tilaa AI-avusteinen yrityksen arvonmääritysraportti. Raportti sisältää arvion yrityksen arvosta, arvostusvälin, menetelmät, riskit ja arvon ajurit."
+  },
+  "sections": [
+    {
+      "id": "hero",
+      "visible": true,
+      "type": "hero",
+      "badge": "AI-arvonmääritysraportti · Launch-hinta 79 €",
+      "title": "Selvitä yrityksen arvo ilman raskasta konsulttiprosessia.",
+      "subtitle": "Syötä yrityksen nimi tai Y-tunnus. Saat analyytikkotasoisen AI-arvonmääritysraportin, jossa näkyvät yrityksen arvioitu arvo, arvostusväli, käytetyt menetelmät, riskit ja arvon tärkeimmät ajurit.",
+      "trustLine": "Rakennettu Valuatumin 25+ vuoden arvonmääritys-, credit risk- ja equity research -osaamisen päälle.",
+      "inputPlaceholder": "Yrityksen nimi tai Y-tunnus",
+      "emailPlaceholder": "Sähköposti (valinnainen)",
+      "cta": "Jatka tilaukseen",
+      "secondaryCta": {
+        "label": "Katso esimerkkiraportti",
+        "href": "#esimerkit"
+      },
+      "formNote": "Raportti toimitetaan sähköpostiin. Automaattinen selainraportti tulossa.",
+      "statusNote": "Automaattinen generointi tulossa. Ensimmäiset raportit toimitetaan sähköpostiin.",
+      "badges": [
+        {
+          "id": "badge-pdf",
+          "label": "PDF-raportti"
+        },
+        {
+          "id": "badge-range",
+          "label": "Arvostusväli"
+        },
+        {
+          "id": "badge-methods",
+          "label": "Menetelmäperustelut"
+        },
+        {
+          "id": "badge-risks",
+          "label": "Riskit ja arvon ajurit"
+        },
+        {
+          "id": "badge-valuatum",
+          "label": "Valuatum 25+ vuotta"
+        }
+      ],
+      "mockup": {
+        "reportLabel": "AI-arvonmääritysraportti",
+        "company": "Esimerkki Yhtiö Oy",
+        "businessId": "Y-tunnus 1234567-8",
+        "valueLabel": "Arvioitu arvo",
+        "value": "2,4 M€",
+        "rangeLabel": "Arvostusväli",
+        "rangeLow": "1,9 M€",
+        "rangeHigh": "2,8 M€",
+        "methodsLabel": "Menetelmien painotus",
+        "methods": [
+          {
+            "id": "m-dcf",
+            "name": "DCF-kassavirta",
+            "weight": 40
+          },
+          {
+            "id": "m-evebitda",
+            "name": "EV/EBITDA",
+            "weight": 25
+          },
+          {
+            "id": "m-pe",
+            "name": "P/E-kerroin",
+            "weight": 20
+          },
+          {
+            "id": "m-roepbv",
+            "name": "ROE vs. P/BV",
+            "weight": 15
+          }
+        ],
+        "risksLabel": "Keskeiset havainnot",
+        "risks": [
+          "Asiakaskeskittymä",
+          "Käyttökate normalisoitu",
+          "Nettovelka huomioitu"
+        ],
+        "footnote": "Esimerkkidata · ei todellinen yhtiö"
+      }
+    },
+    {
+      "id": "sample-reports",
+      "visible": true,
+      "type": "sampleReports",
+      "eyebrow": "Esimerkkiraportit",
+      "title": "Katso laatu ennen tilaamista.",
+      "subtitle": "Esimerkkiraportit näyttävät, miten raportti käsittelee erilaisia yrityksiä: kannattavaa, tappiollista ja tasepohjaista tapausta.",
+      "ctaLabel": "Avaa esimerkkiraportti",
+      "reports": [
+        {
+          "id": "sample-software",
+          "name": "Anonymisoitu ohjelmistoyhtiö",
+          "tag": "Tappiollinen kasvu",
+          "description": "Näyttää, miten raportti käsittelee käänneoletusta, kassaa ja taseen riskejä.",
+          "features": [
+            "EBIT-% vs. P/Sales",
+            "Käänneskenaario",
+            "Kassariittävyys"
+          ],
+          "pdfUrl": "#esimerkit"
+        },
+        {
+          "id": "sample-services",
+          "name": "Anonymisoitu palveluyhtiö",
+          "tag": "Vakaa kannattavuus",
+          "description": "Näyttää, miten raportti arvioi normalisoitua tulosta ja kassavirran kestävyyttä.",
+          "features": [
+            "DCF + kertoimet",
+            "Normalisoitu tulos",
+            "Herkkyysanalyysi"
+          ],
+          "pdfUrl": "#esimerkit"
+        },
+        {
+          "id": "sample-holding",
+          "name": "Anonymisoitu holding-yhtiö",
+          "tag": "Tasepainotteinen arvo",
+          "description": "Näyttää, miten substanssi, nettovelka ja omaisuuserät vaikuttavat arvoon.",
+          "features": [
+            "Substanssiarvo",
+            "Nettovelka-analyysi",
+            "Omaisuuserät"
+          ],
+          "pdfUrl": "#esimerkit"
+        }
+      ]
+    },
+    {
+      "id": "feature-grid",
+      "visible": true,
+      "type": "featureGrid",
+      "eyebrow": "Sisältö",
+      "title": "Mitä raportti sisältää?",
+      "subtitle": "Jäsennelty analyysi, joka ei jätä lukua selittämättä — arvosta ja menetelmistä riskeihin ja toimenpiteisiin.",
+      "items": [
+        {
+          "id": "feat-value",
+          "title": "Yrityksen arvioitu arvo ja arvostusväli",
+          "group": "Arvo"
+        },
+        {
+          "id": "feat-data",
+          "title": "Datan laatu ja rajoitteet",
+          "group": "Arvo"
+        },
+        {
+          "id": "feat-profile",
+          "title": "Liiketoimintaprofiili",
+          "group": "Analyysi"
+        },
+        {
+          "id": "feat-history",
+          "title": "Historiallinen taloudellinen kehitys",
+          "group": "Analyysi"
+        },
+        {
+          "id": "feat-forecast",
+          "title": "AI:n ennusteiden arviointi",
+          "group": "Analyysi"
+        },
+        {
+          "id": "feat-path",
+          "title": "Valuaatiopolun valinta",
+          "group": "Menetelmät"
+        },
+        {
+          "id": "feat-methods",
+          "title": "Käytetyt ja hylätyt menetelmät",
+          "group": "Menetelmät"
+        },
+        {
+          "id": "feat-dcf",
+          "title": "DCF, tasearvo, kertoimet tai muut soveltuvat menetelmät",
+          "group": "Menetelmät"
+        },
+        {
+          "id": "feat-sensitivity",
+          "title": "Herkkyysanalyysi ja skenaariot",
+          "group": "Riskit"
+        },
+        {
+          "id": "feat-risks",
+          "title": "Riskit",
+          "group": "Riskit"
+        },
+        {
+          "id": "feat-drivers",
+          "title": "Arvon ajurit",
+          "group": "Toimenpiteet"
+        },
+        {
+          "id": "feat-actions",
+          "title": "Toimenpiteet arvon kasvattamiseksi",
+          "group": "Toimenpiteet"
+        },
+        {
+          "id": "feat-financials",
+          "title": "Tilinpäätöstaulukot",
+          "group": "Liitteet"
+        },
+        {
+          "id": "feat-method-disclaimer",
+          "title": "Metodologia ja vastuuvapaus",
+          "group": "Liitteet"
+        }
+      ]
+    },
+    {
+      "id": "comparison",
+      "visible": true,
+      "type": "comparison",
+      "eyebrow": "Ero perinteisiin",
+      "title": "Ei pelkkä tunnuslukupaketti.",
+      "intro": "Perinteinen arvoraportti näyttää luvut. Tämä raportti selittää, mitä luvut tarkoittavat — ja mistä yrityksen arvo oikeasti muodostuu.",
+      "traditional": {
+        "title": "Perinteinen arvoraportti",
+        "items": [
+          "Euromääräinen arvo",
+          "Tunnusluvut",
+          "Tilinpäätökset",
+          "Kaavat ja grafiikka"
+        ]
+      },
+      "valuatum": {
+        "title": "Valuatum AI-arvonmääritysraportti",
+        "items": [
+          "Arvo ja arvostusväli",
+          "Käytetyt ja hylätyt menetelmät perusteluineen",
+          "Mitä oletusta arvo eniten tarvitsee",
+          "Riskit, jotka voivat kaataa arvon",
+          "Datan rajoitteet näkyvästi",
+          "Toimenpiteet arvon kasvattamiseksi",
+          "Selkeä analyysiteksti"
+        ]
+      },
+      "footnote": "Selkeämpi tapa ymmärtää, mistä yrityksen arvo muodostuu — vaihtoehto perinteisille arvoraporteille."
+    },
+    {
+      "id": "use-cases",
+      "visible": true,
+      "type": "useCases",
+      "eyebrow": "Käyttötilanteet",
+      "title": "Milloin raportista on hyötyä?",
+      "cases": [
+        {
+          "id": "case-seller",
+          "icon": "handshake",
+          "title": "Yrityksen myyntiä harkitsevalle yrittäjälle",
+          "description": "Tiedät realistisen hintahaarukan ja arvoon vaikuttavat tekijät ennen kuin istut neuvottelupöytään."
+        },
+        {
+          "id": "case-buyer",
+          "icon": "search",
+          "title": "Ostajalle ennen neuvotteluja",
+          "description": "Näet kohdeyhtiön riskit, normalisoidun tuloksen ja perustellun arvostusvälin tarjouksen pohjaksi."
+        },
+        {
+          "id": "case-accountant",
+          "icon": "calculator",
+          "title": "Tilitoimistolle tai konsultille asiakastyöhön",
+          "description": "Tarjoa asiakkaalle analyytikkotasoinen arvonmääritys ilman viikkojen manuaalista työtä."
+        },
+        {
+          "id": "case-lawyer",
+          "icon": "scale",
+          "title": "Juristille omistusjärjestelyihin",
+          "description": "Dokumentoitu ja menetelmiltään perusteltu arvio osakassopimuksiin, perintö- ja ositustilanteisiin."
+        },
+        {
+          "id": "case-board",
+          "icon": "board",
+          "title": "Hallitukselle ja omistajille strategiseen päätöksentekoon",
+          "description": "Arvon ajurit ja herkkyysanalyysi näyttävät, mitkä päätökset kasvattavat omistaja-arvoa eniten."
+        },
+        {
+          "id": "case-funding",
+          "icon": "chart",
+          "title": "Rahoitus- ja sijoittajakeskusteluihin",
+          "description": "Perusteltu arvostusväli ja skenaariot antavat uskottavan pohjan rahoitusneuvotteluille."
+        }
+      ]
+    },
+    {
+      "id": "how-it-works",
+      "visible": true,
+      "type": "howItWorks",
+      "eyebrow": "Tilausprosessi",
+      "title": "Miten tilaus toimii?",
+      "steps": [
+        {
+          "id": "step-1",
+          "title": "Syötä yrityksen nimi tai Y-tunnus",
+          "description": "Kerro, mistä yrityksestä haluat raportin. Sähköpostiosoite riittää toimitukseen."
+        },
+        {
+          "id": "step-2",
+          "title": "Valitse raportti ja maksa",
+          "description": "Valitse yksittäinen raportti tai paketti. Saat tilausvahvistuksen sähköpostiin."
+        },
+        {
+          "id": "step-3",
+          "title": "Valuatum tuottaa AI-arvonmääritysraportin",
+          "description": "Yhdistämme tilinpäätösdatan, arvonmäärityslogiikan ja AI:n tuottaman analyysitekstin."
+        },
+        {
+          "id": "step-4",
+          "title": "Saat PDF-raportin sähköpostiin",
+          "description": "Valmis raportti toimitetaan sähköpostiisi tyypillisesti 1–2 arkipäivässä."
+        }
+      ],
+      "note": "Ensimmäisessä julkaisussa raportit toimitetaan sähköpostiin. Automaattinen generointi suoraan selaimessa lisätään myöhemmin."
+    },
+    {
+      "id": "pricing",
+      "visible": true,
+      "type": "pricing",
+      "eyebrow": "Hinnoittelu",
+      "title": "Selkeä hinta. Ei piilokuluja.",
+      "subtitle": "Näet raportin laadun esimerkeistä ennen ostamista. Kaikki hinnat + alv 25,5 %.",
+      "vatNote": "Hinnat + alv. Yrityksille verovähennyskelpoinen asiantuntijakulu.",
+      "plans": [
+        {
+          "id": "plan-samples",
+          "name": "Esimerkkiraportit",
+          "price": "0 €",
+          "priceSuffix": "",
+          "badge": "",
+          "description": "Avaa valmiit esimerkkiraportit ilman maksukorttia.",
+          "features": [
+            "Kolme erilaista esimerkkitapausta",
+            "Koko raportin rakenne nähtävillä",
+            "Ei rekisteröitymistä"
+          ],
+          "ctaLabel": "Katso esimerkit",
+          "ctaHref": "#esimerkit",
+          "highlighted": false
+        },
+        {
+          "id": "plan-single",
+          "name": "AI-arvonmääritysraportti",
+          "price": "79 €",
+          "priceSuffix": "+ alv",
+          "badge": "Launch-hinta",
+          "description": "Yksi yrityskohtainen PDF-raportti. Toimitus sähköpostiin.",
+          "features": [
+            "Arvo ja arvostusväli",
+            "Menetelmät perusteluineen",
+            "Riskit ja arvon ajurit",
+            "Toimitus 1–2 arkipäivässä"
+          ],
+          "ctaLabel": "Tilaa raportti",
+          "ctaHref": "#tilaa",
+          "highlighted": true
+        },
+        {
+          "id": "plan-bundle",
+          "name": "3 raportin paketti",
+          "price": "199 €",
+          "priceSuffix": "+ alv",
+          "badge": "",
+          "description": "Sopii ostajille, tilitoimistoille ja konsulteille, jotka vertailevat useampaa yritystä.",
+          "features": [
+            "Kolme yrityskohtaista raporttia",
+            "Käytä 12 kuukauden sisällä",
+            "Sama sisältö kuin yksittäisessä"
+          ],
+          "ctaLabel": "Tilaa paketti",
+          "ctaHref": "#tilaa",
+          "highlighted": false
+        },
+        {
+          "id": "plan-pro",
+          "name": "Asiantuntija / yrityskäyttö",
+          "price": "Pyydä tarjous",
+          "priceSuffix": "",
+          "badge": "",
+          "description": "Suuremmat raporttimäärät, integraatiot, white-label tai jatkuva käyttö.",
+          "features": [
+            "Volyymihinnoittelu",
+            "Integraatiot ja API",
+            "White-label-raportit"
+          ],
+          "ctaLabel": "Ota yhteyttä",
+          "ctaHref": "mailto:company-valuation@valuatum.com?subject=Tarjouspyynt%C3%B6%3A%20AI-arvonm%C3%A4%C3%A4ritysraportit",
+          "highlighted": false
+        }
+      ]
+    },
+    {
+      "id": "methodology",
+      "visible": true,
+      "type": "methodology",
+      "eyebrow": "Menetelmä ja luotettavuus",
+      "title": "Rakennettu Valuatumin analyysiosaamisen päälle.",
+      "intro": "Raportti yhdistää tilinpäätösdataa, arvonmäärityslogiikkaa ja AI:n tuottamaa analyysitekstiä. Tavoite ei ole antaa mustaa laatikkoa, vaan näyttää, mikä oletus yrityksen arvon kannalta on ratkaiseva.",
+      "points": [
+        {
+          "id": "point-experience",
+          "title": "25+ vuotta arvonmääritystä",
+          "description": "Valuatum on rakentanut arvonmääritys-, credit risk- ja equity research -järjestelmiä pankeille ja analyysitaloille vuodesta 2000."
+        },
+        {
+          "id": "point-deterministic",
+          "title": "Laskenta on deterministinen",
+          "description": "Raportti käyttää strukturoitua tilinpäätösdataa ja deterministisiä laskentamalleja. AI kirjoittaa analyysin ja selittää luvut — ei keksi niitä."
+        },
+        {
+          "id": "point-method-selection",
+          "title": "Menetelmät valitaan yhtiön profiilin mukaan",
+          "description": "Kannattavalle yhtiölle DCF, P/E, EV/EBITDA ja ROE vs. P/BV. Tappiolliselle EBIT-% vs. P/Sales ja substanssi. Hylätyt menetelmät perustellaan raportissa."
+        },
+        {
+          "id": "point-limitations",
+          "title": "Rajoitteet näkyvät raportissa",
+          "description": "Datan laatu, oletusten epävarmuus ja menetelmien rajoitteet kerrotaan avoimesti — ei pienellä präntätyllä."
+        }
+      ],
+      "stats": [
+        {
+          "id": "stat-years",
+          "value": "25+",
+          "label": "vuotta arvonmääritys- ja analyysijärjestelmiä"
+        },
+        {
+          "id": "stat-methods",
+          "value": "4",
+          "label": "menetelmäperhettä: DCF, kertoimet, ROE/P/BV, substanssi"
+        },
+        {
+          "id": "stat-transparency",
+          "value": "100 %",
+          "label": "oletukset, painotukset ja rajoitteet näkyvissä"
+        }
+      ],
+      "disclaimer": "Raportti ei ole fairness opinion, tilintarkastus tai oikeudellinen käyvän arvon lausunto. Se on analyysiraportti päätöksenteon tueksi.",
+      "image": "/images/boardroom.jpg"
+    },
+    {
+      "id": "faq",
+      "visible": true,
+      "type": "faq",
+      "eyebrow": "UKK",
+      "title": "Usein kysytyt kysymykset.",
+      "items": [
+        {
+          "id": "faq-official",
+          "question": "Onko tämä virallinen käyvän arvon lausunto?",
+          "answer": "Ei. Raportti ei ole tilintarkastus, fairness opinion, sijoitusneuvonta tai oikeudellinen lausunto. Se on analyysiraportti päätöksenteon tueksi — moni käyttää sitä keskustelun ja neuvottelun pohjana ennen raskaampia prosesseja."
+        },
+        {
+          "id": "faq-basis",
+          "question": "Mihin raportin arvo perustuu?",
+          "answer": "Arvo lasketaan yhtiön tilinpäätösdatasta useilla menetelmillä: kassavirtapohjainen DCF, markkinapohjaiset kertoimet (P/E, EV/EBITDA), ROE vs. P/BV -suhde ja tasepohjainen substanssiarvo. Menetelmät painotetaan yhtiön taloudellisen profiilin mukaan, ja raportti kertoo, mitkä menetelmät käytettiin ja miksi osa hylättiin."
+        },
+        {
+          "id": "faq-coverage",
+          "question": "Voiko raportin saada mistä tahansa suomalaisesta yrityksestä?",
+          "answer": "Lähtökohtaisesti kyllä, kun yhtiöllä on vähintään yksi rekisteröity tilinpäätös. Jos data ei riitä luotettavaan arvonmääritykseen, kerromme sen ennen maksua emmekä toimita puutteellista raporttia."
+        },
+        {
+          "id": "faq-delivery",
+          "question": "Kuinka nopeasti raportti toimitetaan?",
+          "answer": "Ensimmäisessä julkaisussa raportit toimitetaan sähköpostiin tyypillisesti 1–2 arkipäivässä tilauksesta. Automaattinen generointi suoraan selaimessa lisätään myöhemmin."
+        },
+        {
+          "id": "faq-data-quality",
+          "question": "Mitä jos data ei riitä luotettavaan arvonmääritykseen?",
+          "answer": "Raportti sisältää aina arvion datan laadusta ja rajoitteista. Jos luotettavaa arviota ei voi tehdä, kerromme sen ennen toimitusta — emme laskuta raportista, jota emme voi perustella."
+        },
+        {
+          "id": "faq-mna",
+          "question": "Voiko raporttia käyttää yrityskaupassa?",
+          "answer": "Kyllä, neuvottelun ja päätöksenteon tukena. Raportti antaa perustellun arvostusvälin, riskit ja arvon ajurit — hyvän pohjan hintaneuvotteluille. Lopullisessa kaupassa kannattaa käyttää myös omaa juridista ja taloudellista neuvonantajaa."
+        },
+        {
+          "id": "faq-multiple",
+          "question": "Voinko tilata useamman raportin?",
+          "answer": "Kyllä. Kolmen raportin paketti sopii useamman kohteen vertailuun. Suuremmista määristä, integraatioista tai white-label-käytöstä saat tarjouksen ottamalla yhteyttä."
+        },
+        {
+          "id": "faq-automation",
+          "question": "Tuleeko automaattinen generointi selaimeen myöhemmin?",
+          "answer": "Kyllä, se on kehityksessä. Ensimmäisessä vaiheessa raportit toimitetaan sähköpostiin, jotta jokaisen raportin laatu voidaan varmistaa. Selaimessa toimiva automaattinen generointi julkaistaan myöhemmin."
+        }
+      ]
+    },
+    {
+      "id": "final-cta",
+      "visible": true,
+      "type": "finalCta",
+      "title": "Tilaa ensimmäinen AI-arvonmääritysraportti.",
+      "copy": "Syötä yrityksen nimi tai Y-tunnus ja aloita tilaus. Näet raportin laadun esimerkeistä ennen ostamista.",
+      "cta": {
+        "label": "Tilaa raportti",
+        "href": "#tilaa"
+      },
+      "secondaryCta": {
+        "label": "Katso esimerkkiraportit",
+        "href": "#esimerkit"
+      }
+    }
+  ]
+}
