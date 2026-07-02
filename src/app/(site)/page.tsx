@@ -19,11 +19,57 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
+function jsonLd(page: Awaited<ReturnType<typeof getPageContent>>) {
+  const faq = page.sections.find((s) => s.type === 'faq') as
+    | { items?: { question: string; answer: string }[] }
+    | undefined
+  const graph: object[] = [
+    {
+      '@type': 'Organization',
+      name: 'Valuatum Oy',
+      url: 'https://valuation.fi',
+      logo: 'https://valuation.fi/logo.svg',
+      email: 'company-valuation@valuatum.com',
+      sameAs: ['https://www.valuatum.com'],
+    },
+    {
+      '@type': 'Service',
+      name: 'AI-arvonmääritysraportti',
+      serviceType: 'Yrityksen arvonmääritys',
+      areaServed: 'FI',
+      provider: { '@type': 'Organization', name: 'Valuatum Oy' },
+      description:
+        'AI-avusteinen yrityksen arvonmääritysraportti suomalaiselle yritykselle: arvio yrityksen arvosta, arvostusväli, käytetyt ja hylätyt menetelmät, skenaariot, riskit ja arvon ajurit PDF-muodossa.',
+      offers: {
+        '@type': 'Offer',
+        price: '79',
+        priceCurrency: 'EUR',
+        description: 'Yksittäinen raportti, 79 € + alv (aloitushinta)',
+      },
+    },
+  ]
+  if (faq?.items?.length) {
+    graph.push({
+      '@type': 'FAQPage',
+      mainEntity: faq.items.map((i) => ({
+        '@type': 'Question',
+        name: i.question,
+        acceptedAnswer: { '@type': 'Answer', text: i.answer },
+      })),
+    })
+  }
+  return { '@context': 'https://schema.org', '@graph': graph }
+}
+
 export default async function HomePage() {
   const [page, site] = await Promise.all([getPageContent('fi', 'home'), getSiteSettings()])
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd(page)) }}
+      />
       {page.sections
         .filter((section) => section.visible)
         .map((section) => {

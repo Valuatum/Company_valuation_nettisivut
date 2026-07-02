@@ -72,6 +72,11 @@
       "id": "foot-valuatum",
       "label": "Valuatum.com",
       "href": "https://www.valuatum.com"
+    },
+    {
+      "id": "foot-tietosuoja",
+      "label": "Tietosuojaseloste",
+      "href": "/tietosuoja"
     }
   ],
   "footerTagline": "AI-avusteinen arvonmääritysraportti suomalaisille yrityksille. Rakennettu Valuatumin 25+ vuoden arvonmääritys-, credit risk- ja equity research -osaamisen päälle.",

@@ -24,6 +24,7 @@ export const metadata: Metadata = {
     "AI-arvonmääritys",
     "yrityksen arvon laskeminen",
   ],
+  alternates: { canonical: "/" },
   openGraph: {
     title: "AI-arvonmääritysraportti suomalaiselle yritykselle | Valuatum",
     description:
@@ -31,6 +32,14 @@ export const metadata: Metadata = {
     locale: "fi_FI",
     type: "website",
     siteName: "Valuatum Arvonmääritys",
+    images: [{ url: "/images/boardroom.jpg", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AI-arvonmääritysraportti suomalaiselle yritykselle | Valuatum",
+    description:
+      "Yrityksen arvo, arvostusväli, menetelmät, riskit ja arvon ajurit yhdessä PDF-raportissa.",
+    images: ["/images/boardroom.jpg"],
   },
 };
 
