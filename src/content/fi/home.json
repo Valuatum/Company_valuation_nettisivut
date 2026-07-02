@@ -97,16 +97,16 @@
       "ctaLabel": "Avaa esimerkkiraportti",
       "reports": [
         {
-          "id": "sample-software",
-          "name": "Anonymisoitu ohjelmistoyhtiö",
-          "tag": "Tappiollinen kasvu",
-          "description": "Näyttää, miten raportti käsittelee käänneoletusta, kassaa ja taseen riskejä.",
+          "id": "sample-supercell",
+          "name": "Supercell Oy",
+          "tag": "Kansainvälinen suuryhtiö",
+          "description": "Todellinen esimerkkiraportti julkisista tilinpäätöstiedoista: miljardiluokan peliyhtiö, jonka arvo nojaa poikkeukselliseen kannattavuuteen ja kansainväliseen liiketoimintaan.",
           "features": [
-            "EBIT-% vs. P/Sales",
-            "Käänneskenaario",
-            "Kassariittävyys"
+            "DCF ja EVA",
+            "Skenaariot ja odotusarvo",
+            "Arvon ajurit ja riskit"
           ],
-          "pdfUrl": "#esimerkit"
+          "pdfUrl": "/samples/esimerkkiraportti-supercell.pdf"
         },
         {
           "id": "sample-services",

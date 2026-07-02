@@ -69,6 +69,21 @@
       "href": "#ukk"
     },
     {
+      "id": "foot-yrityskauppa",
+      "label": "Arvonmääritys yrityskaupassa",
+      "href": "/yrityskauppa"
+    },
+    {
+      "id": "foot-sukupolvenvaihdos",
+      "label": "Arvonmääritys sukupolvenvaihdoksessa",
+      "href": "/sukupolvenvaihdos"
+    },
+    {
+      "id": "foot-blogi",
+      "label": "Blogi",
+      "href": "/blogi"
+    },
+    {
       "id": "foot-valuatum",
       "label": "Valuatum.com",
       "href": "https://www.valuatum.com"

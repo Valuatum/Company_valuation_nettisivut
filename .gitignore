@@ -46,3 +46,4 @@ public/uploads/editor/
 
 # design extraction artifacts
 design-extract-output/
+.editor-password.local
