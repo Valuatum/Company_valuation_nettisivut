@@ -13,6 +13,11 @@
   },
   "navLinks": [
     {
+      "id": "nav-hae",
+      "label": "Hae yritys",
+      "href": "/yritys"
+    },
+    {
       "id": "nav-esimerkit",
       "label": "Esimerkit",
       "href": "#esimerkit"
@@ -36,6 +41,11 @@
       "id": "nav-ukk",
       "label": "UKK",
       "href": "#ukk"
+    },
+    {
+      "id": "nav-laskuri",
+      "label": "Laskuri",
+      "href": "/laskuri"
     }
   ],
   "navCta": {
@@ -67,6 +77,26 @@
       "id": "foot-ukk",
       "label": "Usein kysytyt kysymykset",
       "href": "#ukk"
+    },
+    {
+      "id": "foot-hae",
+      "label": "Hae yritys ja tilaa",
+      "href": "/yritys"
+    },
+    {
+      "id": "foot-laskuri",
+      "label": "Arvonmäärityslaskuri",
+      "href": "/laskuri"
+    },
+    {
+      "id": "foot-kertoimet",
+      "label": "Toimialakertoimet",
+      "href": "/kertoimet"
+    },
+    {
+      "id": "foot-tilinpaatokset",
+      "label": "Tilinpäätösten toimitus",
+      "href": "/tilinpaatokset"
     },
     {
       "id": "foot-yrityskauppa",

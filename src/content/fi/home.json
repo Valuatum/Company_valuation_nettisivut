@@ -350,12 +350,14 @@
           "price": "79 €",
           "priceSuffix": "+ alv",
           "badge": "Launch-hinta",
-          "description": "Yksi yrityskohtainen PDF-raportti. Toimitus sähköpostiin.",
+          "description": "Yksi yrityskohtainen PDF-raportti. Toimitus sähköpostiin. 79 € kun tilinpäätöstiedot ovat valmiina saatavilla.",
           "features": [
             "Arvo ja arvostusväli",
             "Menetelmät perusteluineen",
             "Riskit ja arvon ajurit",
-            "Toimitus 1–2 arkipäivässä"
+            "Toimitus 1–2 arkipäivässä",
+            "Omat tilinpäätökset liitteenä: 99 € (79 € jos sallit tietojen jakamisen)",
+            "Tietojen haku puolestasi: 129 €"
           ],
           "ctaLabel": "Tilaa raportti",
           "ctaHref": "#tilaa",
