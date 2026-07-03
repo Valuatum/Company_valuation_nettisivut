@@ -1,0 +1,83 @@
+// Expert self-serve calls to the valuation backend, authenticated with an
+// invite-only `exp_` key (per-key generation quota enforced server-side).
+const API =
+  process.env.NEXT_PUBLIC_ORDERS_API ??
+  'https://valu-pipeline-production-88f2.up.railway.app'
+
+const auth = (key: string) => ({ Authorization: `Bearer ${key}` })
+const jsonAuth = (key: string) => ({ ...auth(key), 'Content-Type': 'application/json' })
+
+export type ExpertMe = {
+  label: string
+  generations_used: number
+  generations_limit: number
+  remaining: number
+}
+
+export type SavedCompany = {
+  fid: number
+  company_name: string
+  company_code: string | null
+}
+
+export type ClarificationRequest = {
+  id: string
+  question: string
+  why_it_matters?: string
+  valuation_impact?: string
+  current_assumption?: string
+}
+
+export async function validateKey(key: string): Promise<ExpertMe | null> {
+  const r = await fetch(`${API}/api/expert/me`, { headers: auth(key) })
+  return r.ok ? r.json() : null
+}
+
+export async function listCompanies(key: string): Promise<SavedCompany[]> {
+  const r = await fetch(`${API}/api/companies`, { headers: auth(key) })
+  return r.ok ? r.json() : []
+}
+
+export async function generate(
+  key: string,
+  body: { fid: number; company_name: string; company_code?: string | null; user_input?: string }
+): Promise<{ run_id: string }> {
+  const r = await fetch(`${API}/api/expert/generate`, {
+    method: 'POST',
+    headers: jsonAuth(key),
+    body: JSON.stringify(body),
+  })
+  if (!r.ok) throw new Error((await r.text()) || `HTTP ${r.status}`)
+  return r.json()
+}
+
+export async function getRun(key: string, rid: string): Promise<any> {
+  const r = await fetch(`${API}/api/runs/${rid}`, { headers: auth(key) })
+  if (!r.ok) throw new Error((await r.text()) || `HTTP ${r.status}`)
+  return r.json()
+}
+
+export async function round2(
+  key: string,
+  rid: string,
+  body: {
+    clarifications: { id: string; question: string; answer: string }[]
+    clarifications_free_text: string
+  }
+): Promise<{ run_id: string }> {
+  const r = await fetch(`${API}/api/runs/${rid}/round2`, {
+    method: 'POST',
+    headers: jsonAuth(key),
+    body: JSON.stringify(body),
+  })
+  if (!r.ok) throw new Error((await r.text()) || `HTTP ${r.status}`)
+  return r.json()
+}
+
+export async function reportHtml(key: string, rid: string): Promise<string> {
+  const r = await fetch(`${API}/api/runs/${rid}/report.html?force=1`, {
+    headers: auth(key),
+  })
+  if (!r.ok) throw new Error((await r.text()) || `HTTP ${r.status}`)
+  return r.text()
+}
