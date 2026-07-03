@@ -20,27 +20,27 @@
     {
       "id": "nav-esimerkit",
       "label": "Esimerkit",
-      "href": "#esimerkit"
+      "href": "/#esimerkit"
     },
     {
       "id": "nav-sisalto",
       "label": "Sisältö",
-      "href": "#sisalto"
+      "href": "/#sisalto"
     },
     {
       "id": "nav-hinnoittelu",
       "label": "Hinnoittelu",
-      "href": "#hinnoittelu"
+      "href": "/#hinnoittelu"
     },
     {
       "id": "nav-menetelma",
       "label": "Menetelmä",
-      "href": "#menetelma"
+      "href": "/#menetelma"
     },
     {
       "id": "nav-ukk",
       "label": "UKK",
-      "href": "#ukk"
+      "href": "/#ukk"
     },
     {
       "id": "nav-laskuri",
