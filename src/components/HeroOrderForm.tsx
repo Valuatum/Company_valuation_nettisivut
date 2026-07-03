@@ -46,11 +46,11 @@ export function HeroOrderForm({ inputPlaceholder, emailPlaceholder, cta, formNot
   if (state === 'done') {
     return (
       <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 backdrop-blur-md">
-        <p className="text-[17px] font-medium text-white">Kiitos tilauksesta!</p>
+        <p className="text-[17px] font-medium text-white">Kiitos! Pyyntösi on vastaanotettu.</p>
         <p className="mt-2 text-[14px] leading-relaxed text-white/70">
           Raportti yrityksestä <strong className="text-white">{company}</strong> toimitetaan
-          osoitteeseen <strong className="text-white">{email}</strong>. Saat sen sähköpostiisi
-          yleensä saman työpäivän aikana.
+          osoitteeseen <strong className="text-white">{email}</strong> sähköpostiisi
+          1–2 arkipäivässä.
         </p>
       </div>
     )

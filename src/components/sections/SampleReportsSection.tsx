@@ -44,14 +44,21 @@ export function SampleReportsSection({ eyebrow, title, subtitle, ctaLabel, repor
                       </li>
                     ))}
                   </ul>
-                  {/* TODO(backend): link to real sample report PDFs when available */}
-                  <a
-                    href={report.pdfUrl}
-                    className="mt-auto inline-flex items-center gap-2 pt-6 text-sm font-medium text-green-deep transition-colors duration-200 group-hover:text-green"
-                  >
-                    {ctaLabel}
-                    <ArrowRightIcon className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-                  </a>
+                  {report.pdfUrl && !report.pdfUrl.startsWith('#') ? (
+                    <a
+                      href={report.pdfUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-auto inline-flex items-center gap-2 pt-6 text-sm font-medium text-green-deep transition-colors duration-200 group-hover:text-green"
+                    >
+                      {ctaLabel}
+                      <ArrowRightIcon className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                    </a>
+                  ) : (
+                    <span className="mt-auto pt-6 text-sm font-medium text-charcoal-mid/50">
+                      Esimerkki tulossa
+                    </span>
+                  )}
                 </div>
               </article>
             </Reveal>

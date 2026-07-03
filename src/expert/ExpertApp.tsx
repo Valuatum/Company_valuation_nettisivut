@@ -158,7 +158,8 @@ export function ExpertApp() {
         <div className="max-w-md mx-auto mt-20">
           <h1 className="text-2xl font-semibold text-neutral-900">Asiantuntijakäyttö</h1>
           <p className="mt-2 text-sm text-neutral-500">
-            Syötä kutsuavaimesi. Voit tuottaa rajatun määrän arvonmäärityksiä.
+            Syötä kutsuavaimesi. Krediiteilläsi voit tuottaa rajatun määrän
+            arvonmäärityksiä; tarkennukset (kierros 2) ovat maksuttomia.
           </p>
           <form
             onSubmit={(e) => { e.preventDefault(); void signIn(key) }}
@@ -190,7 +191,7 @@ export function ExpertApp() {
         </div>
         <div className="text-right">
           <div className="text-sm font-semibold text-neutral-900">
-            {me.remaining} / {me.generations_limit} jäljellä
+            {me.remaining} / {me.generations_limit} krediittiä
           </div>
           <button onClick={signOut} className="text-xs text-neutral-400 hover:text-neutral-600">
             Kirjaudu ulos
