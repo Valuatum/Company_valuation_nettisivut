@@ -5,6 +5,52 @@ verified end-to-end against the live backend. Read this before touching
 `/yritys`, `/kassa`, `/tilinpaatokset`, `/laskuri`, `/kertoimet`, or
 `src/lib/pricing.ts`.
 
+---
+
+# ⭐ 2026-07-04 — Expert self-serve `/asiantuntija` + paid-first funnel (read first)
+
+This Next.js site is the PUBLIC surface. The valuation **backend** is a separate
+FastAPI repo (`../AI-company-valuation-raportti/pipeline-runner/backend`, live at
+`NEXT_PUBLIC_ORDERS_API` = `valu-pipeline-production-88f2.up.railway.app`). Read
+that repo's HANDOFF "CURRENT STATE + ARCHITECTURE" section for the full picture.
+
+## New: `/asiantuntija` — expert self-serve (LIVE)
+- `src/app/asiantuntija/page.tsx` (noindex) → `src/expert/ExpertApp.tsx` (whole
+  flow) + `src/expert/expertApi.ts` (bearer calls to the backend).
+- Flow: enter an `exp_…` invite key (stored in localStorage) → `GET
+  /api/expert/me` validates + shows credits ("krediittiä") → pick a company from
+  `GET /api/companies` (the operator's pre-fetched companies) → `POST
+  /api/expert/generate {fid,...}` → poll `GET /api/runs/{rid}` → report shown by
+  fetching `report.html?force=1` with the bearer and injecting via `<iframe
+  srcdoc>` (iframe can't send Authorization) → round-2 clarify panel (free).
+- **Why the picker (not free search):** the backend needs a Valuatum **FID**,
+  which only exists for pre-fetched companies. See the FID blocker below.
+- Backend enforces the per-key quota + run ownership; the key is a scoped,
+  capped credential (fine to hold client-side).
+
+## Paid-first funnel (B) — DONE this session
+- **Hero** (`src/components/sections/HeroSection.tsx`): the free order form
+  (`HeroOrderForm`, now orphaned/unused) was replaced with the real
+  `CompanySearch` typeahead → routes to `/yritys/[id]` → `BuyBox` → **Stripe**.
+- **All "Tilaa raportti" CTAs** (`#tilaa`) across nav, pricing cards, content
+  pages, blog, calculator, kertoimet, cancel page → now `/yritys` (paid flow),
+  so the "79 €" promise and the CTA destination agree (was a free-form leak).
+- **Delivery SLA** unified everywhere → "30–60 minuutissa" (was "saman
+  työpäivän aikana" / "1–2 arkipäivässä"). The pipeline is automated now.
+- Sample-report dead links fixed: real PDF links, placeholders show "Esimerkki
+  tulossa" (`SampleReportsSection.tsx`).
+
+## ⚠️ FID blocker + what's NOT built
+- Self-serve works today ONLY for the operator's pre-fetched companies (they
+  have stored FIDs). Arbitrary-company self-serve needs a Y-tunnus→FID resolver
+  from Valuatum's tech team (see backend HANDOFF).
+- **NOT built:** paid customers still get operator-fulfilled reports (BuyBox →
+  Stripe → `/api/orders` → operator). The designed end state is paid →
+  auto-generate → email a **signed report link** (`/raportti/{id}?t=…`, no
+  accounts) → self-serve refine. Needs the FID resolver first.
+- The `199 €` 3-report bundle still has no checkout path in
+  `pricing.ts`/`checkout` route.
+
 ## What happened this session: repo merge
 
 Two site repos existed for this product:
