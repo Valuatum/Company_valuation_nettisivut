@@ -103,7 +103,7 @@ export default function LaskuriPage() {
               </div>
               <div className="flex flex-wrap gap-3">
                 <Link
-                  href="/#tilaa"
+                  href="/yritys"
                   className="rounded-full bg-green px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-green-deep"
                 >
                   Tilaa raportti

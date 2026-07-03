@@ -82,7 +82,7 @@ export default async function BlogPostPage({ params }: Params) {
           arvon ajurit yhdessä PDF:ssä. 79 € + alv.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
-          <Link href="/#tilaa" className="rounded-xl bg-green px-6 py-3 text-[15px] font-medium text-white transition-colors hover:bg-green-deep">
+          <Link href="/yritys" className="rounded-xl bg-green px-6 py-3 text-[15px] font-medium text-white transition-colors hover:bg-green-deep">
             Tilaa raportti
           </Link>
           <Link href="/#esimerkit" className="rounded-xl border border-white/25 px-6 py-3 text-[15px] font-light text-white/90 transition-colors hover:bg-white/10">

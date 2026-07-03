@@ -33,7 +33,7 @@ export default function KassaPeruutettuPage() {
               Palaa yrityksen valintaan
             </Link>
             <Link
-              href="/#tilaa"
+              href="/yritys"
               className="rounded-full border border-white/25 px-5 py-2.5 text-sm font-light text-white/90 transition-colors hover:bg-white/10"
             >
               Tilaa raportti etusivulta

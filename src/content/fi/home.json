@@ -314,7 +314,7 @@
         {
           "id": "step-4",
           "title": "Saat PDF-raportin sähköpostiin",
-          "description": "Valmis raportti toimitetaan sähköpostiisi tyypillisesti 1–2 arkipäivässä."
+          "description": "Valmis raportti toimitetaan sähköpostiisi tyypillisesti 30–60 minuutissa."
         }
       ],
       "note": "Ensimmäisessä julkaisussa raportit toimitetaan sähköpostiin. Automaattinen generointi suoraan selaimessa lisätään myöhemmin."
@@ -355,12 +355,12 @@
             "Arvo ja arvostusväli",
             "Menetelmät perusteluineen",
             "Riskit ja arvon ajurit",
-            "Toimitus 1–2 arkipäivässä",
+            "Toimitus 30–60 minuutissa",
             "Omat tilinpäätökset liitteenä: 99 € (79 € jos sallit tietojen jakamisen)",
             "Tietojen haku puolestasi: 129 €"
           ],
           "ctaLabel": "Tilaa raportti",
-          "ctaHref": "#tilaa",
+          "ctaHref": "/yritys",
           "highlighted": true
         },
         {
@@ -376,7 +376,7 @@
             "Sama sisältö kuin yksittäisessä"
           ],
           "ctaLabel": "Tilaa paketti",
-          "ctaHref": "#tilaa",
+          "ctaHref": "/yritys",
           "highlighted": false
         },
         {
@@ -471,7 +471,7 @@
         {
           "id": "faq-delivery",
           "question": "Kuinka nopeasti raportti toimitetaan?",
-          "answer": "Ensimmäisessä julkaisussa raportit toimitetaan sähköpostiin tyypillisesti 1–2 arkipäivässä tilauksesta. Automaattinen generointi suoraan selaimessa lisätään myöhemmin."
+          "answer": "Ensimmäisessä julkaisussa raportit toimitetaan sähköpostiin tyypillisesti 30–60 minuutissa tilauksesta. Automaattinen generointi suoraan selaimessa lisätään myöhemmin."
         },
         {
           "id": "faq-data-quality",
@@ -503,7 +503,7 @@
       "copy": "Syötä yrityksen nimi tai Y-tunnus ja aloita tilaus. Näet raportin laadun esimerkeistä ennen ostamista.",
       "cta": {
         "label": "Tilaa raportti",
-        "href": "#tilaa"
+        "href": "/yritys"
       },
       "secondaryCta": {
         "label": "Katso esimerkkiraportit",

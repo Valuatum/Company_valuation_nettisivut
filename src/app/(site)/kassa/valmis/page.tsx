@@ -130,7 +130,7 @@ export default async function KassaValmisPage({
               {result.companyName
                 ? `${result.kindLabel} — ${result.companyName}. `
                 : ''}
-              Raportti toimitetaan sähköpostiisi 1–2 arkipäivässä. Tiliä ei tarvita.
+              Raportti toimitetaan sähköpostiisi 30–60 minuutissa. Tiliä ei tarvita.
             </p>
             {result.demo && (
               <p className="mx-auto mt-4 max-w-xl rounded-2xl border border-gold/40 bg-gold/10 px-5 py-3 text-[13.5px] leading-relaxed text-gold">
@@ -153,7 +153,7 @@ export default async function KassaValmisPage({
               <ul className="mt-5 space-y-3.5">
                 {[
                   'Analyysimme kokoaa yrityksen tilinpäätöstiedot ja laatii arvonmääritysraportin usealla menetelmällä.',
-                  'Valmis PDF-raportti toimitetaan sähköpostiisi 1–2 arkipäivässä.',
+                  'Valmis PDF-raportti toimitetaan sähköpostiisi 30–60 minuutissa.',
                   'Jos tietoja puuttuu tai jokin vaatii tarkennusta, otamme yhteyttä samaan sähköpostiosoitteeseen.',
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2.5 text-[15px] leading-relaxed text-charcoal-mid">

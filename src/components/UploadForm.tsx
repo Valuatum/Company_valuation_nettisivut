@@ -98,7 +98,7 @@ export function UploadForm({ sessionId }: Props) {
         <p className="mx-auto mt-3 max-w-lg text-[14.5px] font-light leading-relaxed text-charcoal-mid">
           Saimme {files.length} tiedostoa yrityksestä <strong className="font-medium">{company}</strong>.
           Poimimme luvut ja laadimme raportin — valmis PDF toimitetaan osoitteeseen{' '}
-          <strong className="font-medium">{email}</strong> 1–2 arkipäivässä.
+          <strong className="font-medium">{email}</strong> 30–60 minuutissa.
         </p>
       </div>
     )

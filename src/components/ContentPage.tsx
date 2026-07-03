@@ -124,7 +124,7 @@ export function ContentPage({ page }: { page: ContentPageData }) {
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
-            href="/#tilaa"
+            href="/yritys"
             className="rounded-xl bg-green px-6 py-3 text-[15px] font-medium text-white transition-colors hover:bg-green-deep"
           >
             Tilaa raportti — 79 € + alv

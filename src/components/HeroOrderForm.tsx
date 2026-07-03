@@ -50,7 +50,7 @@ export function HeroOrderForm({ inputPlaceholder, emailPlaceholder, cta, formNot
         <p className="mt-2 text-[14px] leading-relaxed text-white/70">
           Raportti yrityksestä <strong className="text-white">{company}</strong> toimitetaan
           osoitteeseen <strong className="text-white">{email}</strong> sähköpostiisi
-          1–2 arkipäivässä.
+          30–60 minuutissa.
         </p>
       </div>
     )

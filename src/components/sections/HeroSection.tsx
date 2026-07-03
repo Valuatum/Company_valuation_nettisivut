@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import type { PageSection } from '@/content/schema'
-import { HeroOrderForm } from '@/components/HeroOrderForm'
+import { CompanySearch } from '@/components/CompanySearch'
 import { Reveal } from '@/components/Reveal'
 import { CheckIcon } from '@/components/icons'
 
@@ -11,15 +11,10 @@ export function HeroSection({
   title,
   subtitle,
   trustLine,
-  inputPlaceholder,
-  emailPlaceholder,
-  cta,
   secondaryCta,
-  formNote,
   statusNote,
   badges,
   mockup,
-  contactEmail,
 }: Props) {
   return (
     <section id="tilaa" className="relative overflow-hidden bg-forest text-white">
@@ -59,13 +54,10 @@ export function HeroSection({
 
             <Reveal delay={300}>
               <div className="mt-8">
-                <HeroOrderForm
-                  inputPlaceholder={inputPlaceholder}
-                  emailPlaceholder={emailPlaceholder}
-                  cta={cta}
-                  formNote={formNote}
-                  contactEmail={contactEmail}
-                />
+                <CompanySearch variant="dark" />
+                <p className="mt-3 text-[13px] font-light text-white/55">
+                  Hae yritys nimellä tai Y-tunnuksella → näet hinnan ja tilaat raportin.
+                </p>
                 <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-white/55">
                   <span className="inline-flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-gold" />

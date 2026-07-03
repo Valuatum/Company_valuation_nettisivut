@@ -196,7 +196,7 @@ export default function KertoimetPage() {
                 Avaa laskuri
               </Link>
               <Link
-                href="/#tilaa"
+                href="/yritys"
                 className="rounded-full border border-mist px-5 py-2.5 text-sm font-medium text-charcoal transition-colors hover:border-green hover:text-green-deep"
               >
                 Tilaa raportti

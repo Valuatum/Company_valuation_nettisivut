@@ -143,7 +143,7 @@ export function CompanySearch({ variant = 'dark', autoFocus = false }: Props) {
                   tilinpäätöstietojen toimituksesta erikseen.
                 </p>
                 <Link
-                  href="/#tilaa"
+                  href="/yritys"
                   className="mt-4 inline-block rounded-full bg-green px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-green-deep"
                 >
                   Siirry tilauslomakkeelle

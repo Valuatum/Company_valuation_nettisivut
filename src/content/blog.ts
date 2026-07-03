@@ -113,7 +113,7 @@ const data = {
         {
           "heading": "Missä näitä menetelmiä voi nähdä käytännössä?",
           "paragraphs": [
-            "Valuatumin AI-arvonmääritysraportti soveltaa juuri näitä menetelmiä suomalaisiin yhtiöihin: raportti kertoo käytetyt ja hylätyt menetelmät perusteluineen, laskee skenaariot todennäköisyyksineen ja odotusarvon sekä erittelee arvon ajurit ja riskit. Laadun voi tarkistaa etukäteen [ilmaisista esimerkkiraporteista](/#esimerkit) — mukana on todellinen, julkisista tiedoista laadittu [Supercell Oy:n raportti](/samples/esimerkkiraportti-supercell.pdf). Yksittäinen raportti maksaa [79 € + alv](/#hinnoittelu), ja [tilaukseen](/#tilaa) riittää yrityksen nimi tai Y-tunnus. Tekoälyn roolista arvonmäärityksessä kerromme tarkemmin kirjoituksessa [Tekoäly yrityksen arvonmäärityksessä](/blogi/tekoaly-yrityksen-arvonmaarityksessa)."
+            "Valuatumin AI-arvonmääritysraportti soveltaa juuri näitä menetelmiä suomalaisiin yhtiöihin: raportti kertoo käytetyt ja hylätyt menetelmät perusteluineen, laskee skenaariot todennäköisyyksineen ja odotusarvon sekä erittelee arvon ajurit ja riskit. Laadun voi tarkistaa etukäteen [ilmaisista esimerkkiraporteista](/#esimerkit) — mukana on todellinen, julkisista tiedoista laadittu [Supercell Oy:n raportti](/samples/esimerkkiraportti-supercell.pdf). Yksittäinen raportti maksaa [79 € + alv](/#hinnoittelu), ja [tilaukseen](/yritys) riittää yrityksen nimi tai Y-tunnus. Tekoälyn roolista arvonmäärityksessä kerromme tarkemmin kirjoituksessa [Tekoäly yrityksen arvonmäärityksessä](/blogi/tekoaly-yrityksen-arvonmaarityksessa)."
           ],
           "listItems": []
         },
@@ -154,7 +154,7 @@ const data = {
             "Tekoälyn vahvuudet ovat mekaanisia mutta merkittäviä:"
           ],
           "listItems": [
-            "Nopeus: raportti valmistuu yleensä saman työpäivän aikana, kun perinteinen konsulttiselvitys vie viikkoja.",
+            "Nopeus: raportti valmistuu yleensä 30–60 minuutissa, kun perinteinen konsulttiselvitys vie viikkoja.",
             "Kattavuus: tekoäly lukee jokaisen tilinpäätösrivin ja liitetiedon eikä ohita mitään aikapaineen takia — ihmisanalyytikko joutuu priorisoimaan, kone ei väsy.",
             "Johdonmukaisuus: sama menetelmävalinnan logiikka ja sama kurinalaisuus jokaiselle yhtiölle, kohteen koosta ja kiinnostavuudesta riippumatta.",
             "Perustelujen kirjoittaminen: kone jaksaa selittää jokaisen luvun taustan ja dokumentoida myös hylätyt menetelmät — työvaihe, joka käsityönä jää usein tekemättä."
@@ -212,7 +212,7 @@ const data = {
         {
           "heading": "Mitä AI-arvonmääritysraportti maksaa ja miten sen saa?",
           "paragraphs": [
-            "Raportin laadun voi tarkistaa ilmaiseksi: [esimerkkiraportit](/#esimerkit) ovat avoimia ilman rekisteröitymistä, ja mukana on julkisista tiedoista laadittu todellinen [Supercell Oy:n raportti](/samples/esimerkkiraportti-supercell.pdf). Yksittäinen yrityskohtainen raportti maksaa [79 € + alv ja kolmen raportin paketti 199 € + alv](/#hinnoittelu). Raportti toimitetaan PDF:nä sähköpostiin yleensä saman työpäivän aikana — [tilaukseen](/#tilaa) riittää yrityksen nimi tai Y-tunnus. Jos arvonmääritysmenetelmät ovat vieraita, aloita kirjoituksesta [Miten yrityksen arvo määritetään?](/blogi/miten-yrityksen-arvo-maaritetaan)"
+            "Raportin laadun voi tarkistaa ilmaiseksi: [esimerkkiraportit](/#esimerkit) ovat avoimia ilman rekisteröitymistä, ja mukana on julkisista tiedoista laadittu todellinen [Supercell Oy:n raportti](/samples/esimerkkiraportti-supercell.pdf). Yksittäinen yrityskohtainen raportti maksaa [79 € + alv ja kolmen raportin paketti 199 € + alv](/#hinnoittelu). Raportti toimitetaan PDF:nä sähköpostiin yleensä 30–60 minuutissa — [tilaukseen](/yritys) riittää yrityksen nimi tai Y-tunnus. Jos arvonmääritysmenetelmät ovat vieraita, aloita kirjoituksesta [Miten yrityksen arvo määritetään?](/blogi/miten-yrityksen-arvo-maaritetaan)"
           ],
           "listItems": []
         },
