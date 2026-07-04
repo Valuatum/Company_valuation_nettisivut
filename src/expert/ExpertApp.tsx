@@ -9,6 +9,7 @@ import {
   getRun,
   listCompanies,
   reportHtml,
+  reportPdf,
   round2,
   validateKey,
 } from './expertApi'
@@ -78,13 +79,31 @@ export function ExpertApp() {
         return
       }
       try {
-        setReportSrc(await reportHtml(key, r.id))
+        setReportSrc(padHtml(await reportHtml(key, r.id)))
       } catch (e: any) {
         setError('Raporttia ei voitu hakea: ' + (e?.message || e))
       }
     },
     [key]
   )
+
+  async function downloadPdf(open: boolean) {
+    if (!runId) return
+    try {
+      const url = URL.createObjectURL(await reportPdf(key, runId))
+      if (open) {
+        window.open(url, '_blank')
+      } else {
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'arvonmaaritys.pdf'
+        a.click()
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 60000)
+    } catch (e: any) {
+      setError('PDF:n haku epäonnistui: ' + (e?.message || e))
+    }
+  }
 
   // Poll a run until it settles.
   function poll(rid: string) {
@@ -156,7 +175,7 @@ export function ExpertApp() {
     return (
       <Shell>
         <div className="max-w-md mx-auto mt-20">
-          <h1 className="text-2xl font-semibold text-neutral-900">Asiantuntijakäyttö</h1>
+          <h1 className="text-2xl font-semibold text-neutral-900">Testi</h1>
           <p className="mt-2 text-sm text-neutral-500">
             Syötä kutsuavaimesi. Krediiteilläsi voit tuottaa rajatun määrän
             arvonmäärityksiä; tarkennukset (kierros 2) ovat maksuttomia.
@@ -186,12 +205,12 @@ export function ExpertApp() {
     <Shell>
       <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
         <div>
-          <h1 className="text-xl font-semibold text-neutral-900">Arvonmääritys — asiantuntija</h1>
+          <h1 className="text-xl font-semibold text-neutral-900">Arvonmääritys — testi</h1>
           <p className="text-xs text-neutral-500">{me.label}</p>
         </div>
         <div className="text-right">
           <div className="text-sm font-semibold text-neutral-900">
-            {me.remaining} / {me.generations_limit} krediittiä
+            {me.unlimited ? 'Rajaton käyttö' : `${me.remaining} / ${me.generations_limit} krediittiä`}
           </div>
           <button onClick={signOut} className="text-xs text-neutral-400 hover:text-neutral-600">
             Kirjaudu ulos
@@ -233,10 +252,10 @@ export function ExpertApp() {
 
           <button
             onClick={startGeneration}
-            disabled={fid == null || me.remaining <= 0}
+            disabled={fid == null || (!me.unlimited && (me.remaining ?? 0) <= 0)}
             className="mt-4 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-40"
           >
-            {me.remaining <= 0 ? 'Kiintiö käytetty' : 'Tuota arvonmääritys'}
+            {!me.unlimited && (me.remaining ?? 0) <= 0 ? 'Kiintiö käytetty' : 'Tuota arvonmääritys'}
           </button>
         </div>
       )}
@@ -249,10 +268,24 @@ export function ExpertApp() {
           {clarifications.length > 0 && (
             <ClarifyPanel busy={busy} requests={clarifications} onSubmit={startRound2} />
           )}
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => downloadPdf(false)}
+              className="rounded-lg bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700"
+            >
+              Lataa PDF
+            </button>
+            <button
+              onClick={() => downloadPdf(true)}
+              className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-100"
+            >
+              Avaa PDF uuteen välilehteen
+            </button>
+          </div>
           <iframe
             title="Raportti"
             srcDoc={reportSrc}
-            className="mt-4 h-[80vh] w-full rounded-lg border border-neutral-200"
+            className="mt-3 h-[80vh] w-full rounded-lg border border-neutral-200 bg-white"
           />
           <button
             onClick={resetRun}
@@ -264,6 +297,14 @@ export function ExpertApp() {
       )}
     </Shell>
   )
+}
+
+// The backend report HTML is laid out for an A4 PDF; on screen its content
+// hugs the frame edges. Inject a little side padding for the in-page view only
+// (the downloaded PDF comes straight from the backend, unaffected).
+function padHtml(html: string): string {
+  const style = '<style>body{padding:24px 32px !important;box-sizing:border-box}</style>'
+  return html.includes('</head>') ? html.replace('</head>', style + '</head>') : style + html
 }
 
 function Shell({ children }: { children: React.ReactNode }) {

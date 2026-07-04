@@ -10,8 +10,9 @@ const jsonAuth = (key: string) => ({ ...auth(key), 'Content-Type': 'application/
 export type ExpertMe = {
   label: string
   generations_used: number
-  generations_limit: number
-  remaining: number
+  generations_limit: number | null
+  unlimited: boolean
+  remaining: number | null
 }
 
 export type SavedCompany = {
@@ -80,4 +81,12 @@ export async function reportHtml(key: string, rid: string): Promise<string> {
   })
   if (!r.ok) throw new Error((await r.text()) || `HTTP ${r.status}`)
   return r.text()
+}
+
+export async function reportPdf(key: string, rid: string): Promise<Blob> {
+  const r = await fetch(`${API}/api/runs/${rid}/report.pdf?force=1`, {
+    headers: auth(key),
+  })
+  if (!r.ok) throw new Error((await r.text()) || `HTTP ${r.status}`)
+  return r.blob()
 }
