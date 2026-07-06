@@ -257,6 +257,11 @@ export function ExpertApp() {
           >
             {!me.unlimited && (me.remaining ?? 0) <= 0 ? 'Kiintiö käytetty' : 'Tuota arvonmääritys'}
           </button>
+          <p className="mt-2 text-xs text-neutral-500">
+            Raportin generointi kestää tyypillisesti 10–20 minuuttia. Valmis raportti sisältää
+            tekoälyn tarkentavia kysymyksiä — vastaamalla niihin saat halutessasi tarkennetun
+            version (2 tarkennuskierrosta sisältyy).
+          </p>
         </div>
       )}
 
@@ -325,10 +330,16 @@ function Progress({ results }: { results: any[] }) {
     ? `Analysoidaan (vaihe ${running.order})…`
     : 'Käynnistetään…'
   return (
-    <div className="mt-6 flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
-      <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500" />
-      <span className="text-sm text-emerald-800">{label}</span>
-      <span className="text-xs text-emerald-600">Kestää muutaman minuutin.</span>
+    <div className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
+      <div className="flex items-center gap-3">
+        <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500" />
+        <span className="text-sm text-emerald-800">{label}</span>
+        <span className="text-xs text-emerald-600">Kestää tyypillisesti 10–20 minuuttia.</span>
+      </div>
+      <p className="mt-1.5 text-xs text-emerald-700">
+        Valmis raportti sisältää tekoälyn tarkentavia kysymyksiä — vastaamalla niihin saat
+        halutessasi tarkennetun version (2 tarkennuskierrosta sisältyy).
+      </p>
     </div>
   )
 }
