@@ -177,6 +177,23 @@ auto-generated from the same source.
    sukupolvenvaihdos/blog copy, `metadataBase` domain unconfirmed) is
    still open — this session didn't touch that content.
 
+## 2026-07-07 (cont.) — Checkout now auto-generates for the "existing" kind
+
+`BuyBox.tsx` gained a free-text field (info the AI can't find). For
+`kind==='existing'` checkouts, `kassa/valmis/page.tsx` now calls the
+backend's new `POST /api/public/checkout-generate` (see backend
+HANDOFF) instead of just filing a manual order — this mints a one-use
+key, resolves the paid y-tunnus to a Valuatum FID, and starts the run
+immediately. The thank-you page shows a live "Seuraa raporttia tästä"
+link (`/testi?key=&rid=`) alongside the email-delivery promise. `/testi`
+(`ExpertApp.tsx`) now reads that `?key=&rid=` and jumps straight to the
+run instead of requiring manual key entry — `resumeFromLink`. Also added
+an `excl@valuatum.com` "something wrong?" footer line to `/testi`.
+`import`/`creditsafe` checkout kinds are unchanged (still manual/operator
+-fulfilled). Commit `6952ee0`. **Not run against a real checkout yet** —
+and per point 3 below, Stripe is still in demo mode on Vercel, so nothing
+here is processing real money regardless.
+
 ## Backend context (sibling repo)
 
 The report-generation pipeline lives in
