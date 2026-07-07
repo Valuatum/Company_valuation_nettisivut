@@ -36,12 +36,48 @@ export function ExpertApp() {
   const [error, setError] = useState<string | null>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Restore a saved key on load.
+  // Entry points: an emailed/on-screen link carries ?key=&rid= straight to a
+  // specific report (the paid checkout flow mints a single-use key per
+  // order); otherwise restore a previously signed-in key from localStorage.
   useEffect(() => {
-    const saved = typeof window !== 'undefined' ? localStorage.getItem(KEY_STORAGE) : ''
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const urlKey = params.get('key')
+    const urlRid = params.get('rid')
+    if (urlKey && urlRid) {
+      void resumeFromLink(urlKey, urlRid)
+      return
+    }
+    const saved = localStorage.getItem(KEY_STORAGE)
     if (saved) void signIn(saved)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  async function resumeFromLink(k: string, rid: string) {
+    setError(null)
+    const info = await validateKey(k)
+    if (!info) {
+      setError('Avain ei kelpaa tai on käytetty loppuun.')
+      return
+    }
+    localStorage.setItem(KEY_STORAGE, k)
+    setKey(k)
+    setMe(info)
+    try {
+      const r = await getRun(k, rid)
+      setRunId(rid)
+      setRun(r)
+      if (r.status === 'running') {
+        setBusy(true)
+        poll(rid, k)
+      } else {
+        setBusy(true)
+        await finishRun(r, k)
+      }
+    } catch (e: any) {
+      setError('Raporttia ei löytynyt: ' + (e?.message || e))
+    }
+  }
 
   async function signIn(k: string) {
     setError(null)
@@ -100,7 +136,9 @@ export function ExpertApp() {
   }
 
   const finishRun = useCallback(
-    async (r: any) => {
+    // k defaults to the signed-in key; resumeFromLink passes it explicitly
+    // since it can't wait for the setKey() state update to land first.
+    async (r: any, k: string = key) => {
       setBusy(false)
       if (pollRef.current) clearInterval(pollRef.current)
       pollRef.current = null
@@ -110,7 +148,7 @@ export function ExpertApp() {
         return
       }
       try {
-        setReportSrc(padHtml(await reportHtml(key, r.id)))
+        setReportSrc(padHtml(await reportHtml(k, r.id)))
       } catch (e: any) {
         setError('Raporttia ei voitu hakea: ' + (e?.message || e))
       }
@@ -136,14 +174,14 @@ export function ExpertApp() {
     }
   }
 
-  // Poll a run until it settles.
-  function poll(rid: string) {
+  // Poll a run until it settles. k defaults to the signed-in key; see finishRun.
+  function poll(rid: string, k: string = key) {
     if (pollRef.current) clearInterval(pollRef.current)
     pollRef.current = setInterval(async () => {
       try {
-        const r = await getRun(key, rid)
+        const r = await getRun(k, rid)
         setRun(r)
-        if (r.status !== 'running') void finishRun(r)
+        if (r.status !== 'running') void finishRun(r, k)
       } catch {
         /* transient */
       }
@@ -419,7 +457,15 @@ function padHtml(html: string): string {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <main className="min-h-screen bg-neutral-50">
-      <div className="mx-auto max-w-4xl px-6 py-10">{children}</div>
+      <div className="mx-auto max-w-4xl px-6 py-10">
+        {children}
+        <p className="mt-10 border-t border-neutral-200 pt-4 text-xs text-neutral-400">
+          Jos jokin menee pieleen, ota yhteyttä:{' '}
+          <a href="mailto:excl@valuatum.com" className="text-neutral-600 hover:underline">
+            excl@valuatum.com
+          </a>
+        </p>
+      </div>
     </main>
   )
 }

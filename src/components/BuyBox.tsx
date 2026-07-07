@@ -6,6 +6,7 @@ import { eur, quote, type ReportKind } from '@/lib/pricing'
 type Props = {
   companyId: string
   companyName: string
+  businessId: string
   hasFinancials: boolean
 }
 
@@ -37,11 +38,12 @@ const OPTIONS: { kind: Exclude<ReportKind, 'existing'>; label: string; descripti
   },
 ]
 
-export function BuyBox({ companyId, companyName, hasFinancials }: Props) {
+export function BuyBox({ companyId, companyName, businessId, hasFinancials }: Props) {
   const [kind, setKind] = useState<ReportKind>(hasFinancials ? 'existing' : 'import')
   // Imports default to sharing on (the cheaper, catalogue-building choice).
   const [share, setShare] = useState(true)
   const [email, setEmail] = useState('')
+  const [userInput, setUserInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -60,8 +62,10 @@ export function BuyBox({ companyId, companyName, hasFinancials }: Props) {
           kind,
           companyId,
           companyName,
+          businessId,
           shareData: shareActive,
           customerEmail: email,
+          userInput: userInput.trim() || undefined,
         }),
       })
       const data = (await res.json()) as { url?: string; error?: string }
@@ -165,6 +169,20 @@ export function BuyBox({ companyId, companyName, hasFinancials }: Props) {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="nimi@yritys.fi"
             autoComplete="email"
+            className="mt-1.5 w-full rounded-xl border border-mist bg-white px-4 py-3 text-sm text-charcoal outline-none transition-colors placeholder:text-steel focus:border-green"
+          />
+        </label>
+
+        <label className="mt-4 block">
+          <span className="text-[13px] font-medium text-charcoal">
+            Lisätiedot tekoälylle (valinnainen)
+          </span>
+          <textarea
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            rows={3}
+            maxLength={4000}
+            placeholder="Tietoja joita tekoäly ei löydä itse julkisista lähteistä — esim. ajankohtainen konteksti, omat oletukset…"
             className="mt-1.5 w-full rounded-xl border border-mist bg-white px-4 py-3 text-sm text-charcoal outline-none transition-colors placeholder:text-steel focus:border-green"
           />
         </label>

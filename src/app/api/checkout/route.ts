@@ -6,8 +6,10 @@ interface CheckoutBody {
   kind: ReportKind
   companyId?: string
   companyName?: string
+  businessId?: string
   shareData?: boolean
   customerEmail?: string
+  userInput?: string
 }
 
 export async function POST(req: Request) {
@@ -27,7 +29,9 @@ export async function POST(req: Request) {
   // Sharing only meaningful for imported statements.
   const shareData = kind === 'import' && Boolean(body.shareData)
   const companyName = body.companyName?.slice(0, 200) || 'Valittu yritys'
+  const businessId = body.businessId?.slice(0, 30) || ''
   const customerEmail = body.customerEmail?.slice(0, 200) || ''
+  const userInput = body.userInput?.slice(0, 4000) || ''
   const q = quote(kind, shareData)
 
   // Where the user lands after a successful payment.
@@ -44,7 +48,9 @@ export async function POST(req: Request) {
   if (!stripe) {
     const params = new URLSearchParams({ demo: '1', kind })
     if (companyName) params.set('company', companyName)
+    if (businessId) params.set('businessId', businessId)
     if (customerEmail) params.set('email', customerEmail)
+    if (userInput) params.set('userInput', userInput)
     if (shareData) params.set('share', '1')
     const demoTarget =
       kind === 'import'
@@ -83,8 +89,13 @@ export async function POST(req: Request) {
         kind,
         companyId: body.companyId ?? '',
         companyName,
+        businessId,
         customerEmail,
         shareData: String(shareData),
+        // Stripe metadata values cap at 500 chars — the model/DB allow up to
+        // 4000, but that's for the immediate checkout-generate call below,
+        // not for round-tripping through Stripe.
+        userInput: userInput.slice(0, 500),
       },
       success_url: `${siteUrl()}${successPath}`,
       cancel_url: `${siteUrl()}/kassa/peruutettu`,

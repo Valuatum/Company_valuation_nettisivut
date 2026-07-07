@@ -4,7 +4,7 @@ import { Reveal } from '@/components/Reveal'
 import { CheckIcon } from '@/components/icons'
 import { getStripe } from '@/lib/stripe'
 import { eur, quote, type ReportKind } from '@/lib/pricing'
-import { postOrder } from '@/lib/orders'
+import { postOrder, postCheckoutGenerate } from '@/lib/orders'
 import { getSiteSettings } from '@/content/server'
 
 export const metadata: Metadata = {
@@ -39,6 +39,25 @@ type OrderResult = {
   demo: boolean
   companyName: string
   kindLabel: string
+  // Set only for kind==='existing': auto-generation was started instead of
+  // waiting on manual operator fulfilment. Null if generation failed to kick
+  // off (rare — company not resolvable, etc.) so the page can fall back to
+  // "we'll be in touch" copy instead of a dead link.
+  reportLink: string | null
+}
+
+// kind==='existing' means we already hold the company's financials, so
+// generation can start automatically instead of an operator fulfilling by
+// hand. 'import'/'creditsafe' still need a human step (upload / Creditsafe
+// fetch isn't wired to auto-generation yet) — those stay on postOrder.
+async function startGeneration(
+  companyName: string, businessId: string, email: string, userInput: string, sessionId: string,
+): Promise<string | null> {
+  if (!businessId) return null
+  const result = await postCheckoutGenerate({
+    businessId, companyName, email, userInput, stripeSessionId: sessionId,
+  })
+  return result ? `/testi?key=${encodeURIComponent(result.key)}&rid=${encodeURIComponent(result.runId)}` : null
 }
 
 async function resolveAndPostOrder(sp: Search): Promise<OrderResult> {
@@ -52,39 +71,55 @@ async function resolveAndPostOrder(sp: Search): Promise<OrderResult> {
 
     const kind = asKind(session.metadata?.kind ?? param(sp, 'kind'))
     const companyName = session.metadata?.companyName || 'Tuntematon yritys'
+    const businessId = session.metadata?.businessId || ''
+    const userInput = session.metadata?.userInput || ''
     const email =
       session.customer_details?.email ||
       session.customer_email ||
       session.metadata?.customerEmail ||
       ''
 
+    let reportLink: string | null = null
     if (email && !postedSessions.has(sessionId)) {
       postedSessions.add(sessionId)
-      await postOrder({
-        company: companyName,
-        email,
-        user_input: `MAKSETTU (Stripe ${sessionId}), tuote: ${kind}, hinta: ${eur(session.amount_total ?? 0)}`,
-      })
+      if (kind === 'existing') {
+        reportLink = await startGeneration(companyName, businessId, email, userInput, sessionId)
+      }
+      if (!reportLink) {
+        await postOrder({
+          company: companyName,
+          email,
+          user_input: `MAKSETTU (Stripe ${sessionId}), tuote: ${kind}, hinta: ${eur(session.amount_total ?? 0)}`,
+        })
+      }
     }
-    return { demo: false, companyName, kindLabel: kindLabels[kind] }
+    return { demo: false, companyName, kindLabel: kindLabels[kind], reportLink }
   }
 
   // --- Demo flow: no Stripe key or explicit ?demo=1 --------------------------
   const kind = asKind(param(sp, 'kind'))
   const companyName = param(sp, 'company')
+  const businessId = param(sp, 'businessId')
+  const userInput = param(sp, 'userInput')
   const email = param(sp, 'email')
   const q = quote(kind, param(sp, 'share') === '1')
   const demoKey = `demo:${kind}:${companyName}:${email}`
 
+  let reportLink: string | null = null
   if (email && companyName && !postedSessions.has(demoKey)) {
     postedSessions.add(demoKey)
-    await postOrder({
-      company: companyName,
-      email,
-      user_input: `KOEMAKSU (ei veloitusta), tuote: ${kind}, hinta: ${eur(q.total)}`,
-    })
+    if (kind === 'existing') {
+      reportLink = await startGeneration(companyName, businessId, email, userInput, demoKey)
+    }
+    if (!reportLink) {
+      await postOrder({
+        company: companyName,
+        email,
+        user_input: `KOEMAKSU (ei veloitusta), tuote: ${kind}, hinta: ${eur(q.total)}`,
+      })
+    }
   }
-  return { demo: true, companyName, kindLabel: kindLabels[kind] }
+  return { demo: true, companyName, kindLabel: kindLabels[kind], reportLink }
 }
 
 export default async function KassaValmisPage({
@@ -94,7 +129,7 @@ export default async function KassaValmisPage({
 }) {
   const sp = await searchParams
 
-  let result: OrderResult = { demo: false, companyName: '', kindLabel: '' }
+  let result: OrderResult = { demo: false, companyName: '', kindLabel: '', reportLink: null }
   let resolved = false
   try {
     result = await resolveAndPostOrder(sp)
@@ -130,8 +165,18 @@ export default async function KassaValmisPage({
               {result.companyName
                 ? `${result.kindLabel} — ${result.companyName}. `
                 : ''}
-              Raportti toimitetaan sähköpostiisi 30–60 minuutissa. Tiliä ei tarvita.
+              {result.reportLink
+                ? 'Raportin generointi on käynnissä — kestää tyypillisesti 10–20 minuuttia. Lähetämme valmiin raportin sähköpostiisi, ja voit seurata sitä myös tästä sivusta.'
+                : 'Raportti toimitetaan sähköpostiisi 30–60 minuutissa. Tiliä ei tarvita.'}
             </p>
+            {result.reportLink && (
+              <a
+                href={result.reportLink}
+                className="mx-auto mt-5 inline-block rounded-full bg-lime px-5 py-2.5 text-sm font-medium text-forest transition-colors hover:brightness-95"
+              >
+                Seuraa raporttia tästä →
+              </a>
+            )}
             {result.demo && (
               <p className="mx-auto mt-4 max-w-xl rounded-2xl border border-gold/40 bg-gold/10 px-5 py-3 text-[13.5px] leading-relaxed text-gold">
                 Tämä oli testitilaus — maksua ei veloitettu. Tilaus kirjattiin
@@ -153,8 +198,10 @@ export default async function KassaValmisPage({
               <ul className="mt-5 space-y-3.5">
                 {[
                   'Analyysimme kokoaa yrityksen tilinpäätöstiedot ja laatii arvonmääritysraportin usealla menetelmällä.',
-                  'Valmis PDF-raportti toimitetaan sähköpostiisi 30–60 minuutissa.',
-                  'Jos tietoja puuttuu tai jokin vaatii tarkennusta, otamme yhteyttä samaan sähköpostiosoitteeseen.',
+                  result.reportLink
+                    ? 'Valmis PDF-raportti toimitetaan sähköpostiisi 10–20 minuutin kuluttua — voit myös seurata edistymistä yllä olevasta linkistä.'
+                    : 'Valmis PDF-raportti toimitetaan sähköpostiisi 30–60 minuutissa.',
+                  'Jos tekoäly jää epävarmaksi jostain luvusta, se kysyy tarkentavia kysymyksiä samassa näkymässä — vastaamalla saat halutessasi tarkennetun version.',
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2.5 text-[15px] leading-relaxed text-charcoal-mid">
                     <CheckIcon className="mt-1 h-4 w-4 shrink-0 text-green" />
@@ -172,6 +219,15 @@ export default async function KassaValmisPage({
                   {contactEmail}
                 </a>
               </p>
+              {result.reportLink && (
+                <p className="mt-1.5 text-[13px] text-steel">
+                  Jos raportin generointi ei etene tai jokin näyttää menneen pieleen, ota
+                  yhteyttä:{' '}
+                  <a href="mailto:excl@valuatum.com" className="font-medium text-green-deep hover:text-green">
+                    excl@valuatum.com
+                  </a>
+                </p>
+              )}
             </div>
           </Reveal>
           <Reveal delay={100}>

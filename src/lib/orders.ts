@@ -28,3 +28,42 @@ export async function postOrder(payload: OrderPayload): Promise<boolean> {
     return false
   }
 }
+
+export type CheckoutGeneratePayload = {
+  businessId: string
+  companyName: string
+  email: string
+  userInput?: string
+  stripeSessionId: string
+}
+
+export type CheckoutGenerateResult = { runId: string; key: string } | null
+
+// Auto-generation path for the "we already have the financials" checkout
+// flow: resolves the paid company to a Valuatum FID and starts the pipeline
+// immediately, instead of waiting for an operator to fulfil the order by
+// hand. Idempotent server-side on stripeSessionId.
+export async function postCheckoutGenerate(
+  payload: CheckoutGeneratePayload,
+): Promise<CheckoutGenerateResult> {
+  try {
+    const r = await fetch(`${API}/api/public/checkout-generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        business_id: payload.businessId.slice(0, 30),
+        company_name: payload.companyName.slice(0, 300),
+        email: payload.email.slice(0, 200),
+        user_input: (payload.userInput ?? '').slice(0, 4000),
+        stripe_session_id: payload.stripeSessionId.slice(0, 200),
+        website: '',
+      }),
+      cache: 'no-store',
+    })
+    if (!r.ok) return null
+    const data = (await r.json()) as { run_id?: string; key?: string }
+    return data.run_id && data.key ? { runId: data.run_id, key: data.key } : null
+  } catch {
+    return null
+  }
+}

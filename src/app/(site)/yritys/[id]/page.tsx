@@ -121,6 +121,7 @@ export default async function CompanyPage({ params }: { params: Params }) {
             <BuyBox
               companyId={company.id}
               companyName={company.name}
+              businessId={company.businessId}
               hasFinancials={company.hasFinancials}
             />
           </Reveal>
