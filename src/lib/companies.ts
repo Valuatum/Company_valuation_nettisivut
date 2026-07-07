@@ -128,7 +128,8 @@ class MockDataSource implements DataSource {
   }
 }
 
-// Proxy hook: when VALUATUM_DATA_API_URL is set, all reads go to the backend.
+// Proxy hook: when VALUATUM_DATA_API_URL is set, all reads go to a backend
+// that already speaks the Company shape (name/businessId/city/industry/...).
 class ApiDataSource implements DataSource {
   constructor(
     private baseUrl: string,
@@ -161,10 +162,89 @@ class ApiDataSource implements DataSource {
   }
 }
 
+type ValuatumCandidate = {
+  fid: number
+  company_name: string | null
+  company_code: string | null
+  industry_text: string | null
+}
+
+// Real "any company" lookup: the report-generation backend already resolves
+// a name/y-tunnus to a Valuatum FID (used by /testi and the paid checkout
+// flow) — this just reuses that same public endpoint for homepage search, so
+// the site isn't limited to the bundled sample anymore. A Valuatum hit always
+// means we can generate a report for it (that's what "existing financials"
+// means here), so hasFinancials is always true for these results.
+class ValuatumDataSource implements DataSource {
+  constructor(private baseUrl: string) {}
+
+  private toCompany(c: ValuatumCandidate): Company {
+    const businessId = c.company_code || String(c.fid)
+    return {
+      id: businessId,
+      name: c.company_name || businessId,
+      businessId,
+      city: '',
+      industry: c.industry_text || '',
+      hasFinancials: true,
+    }
+  }
+
+  async search(query: string, limit = 8): Promise<Company[]> {
+    const url = new URL(`${this.baseUrl}/api/public/company-search`)
+    url.searchParams.set('q', query)
+    const res = await fetch(url, { cache: 'no-store' })
+    if (!res.ok) throw new Error(`Company search failed: ${res.status}`)
+    const rows = (await res.json()) as ValuatumCandidate[]
+    return rows.slice(0, limit).map((c) => this.toCompany(c))
+  }
+
+  async getById(id: string): Promise<Company | null> {
+    const rows = await this.search(id, 5)
+    return (
+      rows.find((c) => c.businessId.replace('-', '') === id.replace('-', '')) ||
+      rows[0] ||
+      null
+    )
+  }
+}
+
+// Bundled sample stays searchable too (curated copy, revenue/employee
+// figures the live lookup can't cheaply provide) — merged with live results,
+// deduped by y-tunnus, live results first.
+class CombinedDataSource implements DataSource {
+  constructor(
+    private live: DataSource,
+    private mock: DataSource
+  ) {}
+
+  async search(query: string, limit = 8): Promise<Company[]> {
+    const [liveResults, mockResults] = await Promise.all([
+      this.live.search(query, limit).catch(() => [] as Company[]),
+      this.mock.search(query, limit),
+    ])
+    const seen = new Set(liveResults.map((c) => c.businessId.replace('-', '')))
+    const merged = [
+      ...liveResults,
+      ...mockResults.filter((c) => !seen.has(c.businessId.replace('-', ''))),
+    ]
+    return merged.slice(0, limit)
+  }
+
+  async getById(id: string): Promise<Company | null> {
+    const sample = await this.mock.getById(id)
+    if (sample) return sample
+    return this.live.getById(id).catch(() => null)
+  }
+}
+
 function source(): DataSource {
-  const base = process.env.VALUATUM_DATA_API_URL
-  if (base) return new ApiDataSource(base, process.env.VALUATUM_DATA_API_KEY)
-  return new MockDataSource()
+  if (process.env.VALUATUM_DATA_API_URL) {
+    return new ApiDataSource(process.env.VALUATUM_DATA_API_URL, process.env.VALUATUM_DATA_API_KEY)
+  }
+  const backend =
+    process.env.NEXT_PUBLIC_ORDERS_API ?? 'https://valu-pipeline-production-88f2.up.railway.app'
+  return new CombinedDataSource(new ValuatumDataSource(backend), new MockDataSource())
 }
 
 export function searchCompanies(query: string, limit?: number): Promise<Company[]> {
@@ -176,15 +256,9 @@ export function getCompany(id: string): Promise<Company | null> {
 }
 
 /**
- * A curated set of companies for browse/listing views. With the mock data
- * source this returns the bundled sample; with a real API it falls back to a
- * broad search so the view still populates.
+ * A curated set of companies for browse/listing views. Always the bundled
+ * sample — a live Valuatum search has no sensible "browse everything" query.
  */
 export async function featuredCompanies(limit = 8): Promise<Company[]> {
-  if (!process.env.VALUATUM_DATA_API_URL) return SAMPLE.slice(0, limit)
-  try {
-    return await source().search('oy', limit)
-  } catch {
-    return []
-  }
+  return SAMPLE.slice(0, limit)
 }
