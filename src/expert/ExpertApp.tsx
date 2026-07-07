@@ -3,14 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   type ClarificationRequest,
+  type CompanyCandidate,
   type ExpertMe,
-  type SavedCompany,
   generate,
   getRun,
-  listCompanies,
   reportHtml,
   reportPdf,
   round2,
+  searchCompany,
   validateKey,
 } from './expertApi'
 
@@ -20,8 +20,12 @@ const TERMINAL = ['ok', 'validation_failed', 'error']
 export function ExpertApp() {
   const [key, setKey] = useState('')
   const [me, setMe] = useState<ExpertMe | null>(null)
-  const [companies, setCompanies] = useState<SavedCompany[]>([])
-  const [fid, setFid] = useState<number | null>(null)
+
+  const [query, setQuery] = useState('')
+  const [candidates, setCandidates] = useState<CompanyCandidate[]>([])
+  const [selected, setSelected] = useState<CompanyCandidate | null>(null)
+  const [searching, setSearching] = useState(false)
+  const [searchErr, setSearchErr] = useState<string | null>(null)
   const [userInput, setUserInput] = useState('')
 
   const [runId, setRunId] = useState<string | null>(null)
@@ -48,7 +52,6 @@ export function ExpertApp() {
     localStorage.setItem(KEY_STORAGE, k)
     setKey(k)
     setMe(info)
-    setCompanies(await listCompanies(k))
   }
 
   function signOut() {
@@ -66,6 +69,32 @@ export function ExpertApp() {
     setReportSrc(null)
     setBusy(false)
     setError(null)
+    setQuery('')
+    setCandidates([])
+    setSelected(null)
+    setSearchErr(null)
+    setUserInput('')
+  }
+
+  async function doSearch() {
+    const q = query.trim()
+    if (q.length < 2) return
+    setSearching(true)
+    setSearchErr(null)
+    setSelected(null)
+    setCandidates([])
+    try {
+      const results = await searchCompany(key, q)
+      setCandidates(results)
+      if (results.length === 1) setSelected(results[0])
+      if (results.length === 0) {
+        setSearchErr('Yritystä ei löytynyt. Tarkista nimi tai y-tunnus.')
+      }
+    } catch (e: any) {
+      setSearchErr(e?.message || String(e))
+    } finally {
+      setSearching(false)
+    }
   }
 
   const finishRun = useCallback(
@@ -120,15 +149,14 @@ export function ExpertApp() {
   }
 
   async function startGeneration() {
-    if (fid == null) return
-    const company = companies.find((c) => c.fid === fid)
-    if (!company) return
-    resetRun()
+    if (!selected) return
+    const company = selected
+    resetRunKeepSelection()
     setBusy(true)
     try {
       const { run_id } = await generate(key, {
-        fid,
-        company_name: company.company_name,
+        fid: company.fid,
+        company_name: company.company_name || query.trim(),
         company_code: company.company_code,
         user_input: userInput.trim() || undefined,
       })
@@ -139,6 +167,18 @@ export function ExpertApp() {
       setBusy(false)
       setError(e?.message || String(e))
     }
+  }
+
+  // Like resetRun, but keeps the already-picked company + free-text notes
+  // (used right before starting a generation, not when leaving the run).
+  function resetRunKeepSelection() {
+    if (pollRef.current) clearInterval(pollRef.current)
+    pollRef.current = null
+    setRunId(null)
+    setRun(null)
+    setReportSrc(null)
+    setBusy(false)
+    setError(null)
   }
 
   async function startRound2(
@@ -169,6 +209,7 @@ export function ExpertApp() {
     (!busy && Array.isArray(results.find((r) => r.order === 1)?.parsed_json?.clarification_requests)
       ? results.find((r) => r.order === 1).parsed_json.clarification_requests
       : []) || []
+  const isRefinedVersion = Boolean(run?.parent_run_id)
 
   // ── gate ──────────────────────────────────────────────────────────────
   if (!me) {
@@ -220,23 +261,52 @@ export function ExpertApp() {
 
       {!runId && (
         <div className="mt-6 max-w-xl">
-          <label className="block text-sm font-medium text-neutral-700">Yritys</label>
-          <select
-            value={fid ?? ''}
-            onChange={(e) => setFid(e.target.value ? Number(e.target.value) : null)}
-            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-          >
-            <option value="">Valitse yritys…</option>
-            {companies.map((c) => (
-              <option key={c.fid} value={c.fid}>
-                {c.company_name}
-              </option>
-            ))}
-          </select>
-          {companies.length === 0 && (
-            <p className="mt-1 text-xs text-neutral-400">
-              Ei valmisteltuja yrityksiä. Pyydä ylläpitoa lisäämään yritys.
-            </p>
+          <label className="block text-sm font-medium text-neutral-700">Yritys (nimi tai y-tunnus)</label>
+          <div className="mt-1 flex gap-2">
+            <input
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); setSelected(null) }}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void doSearch() } }}
+              placeholder="esim. Valuatum Oy tai 1612398-8"
+              className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+            />
+            <button
+              onClick={doSearch}
+              disabled={searching || query.trim().length < 2}
+              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 disabled:opacity-40"
+            >
+              {searching ? 'Haetaan…' : 'Hae'}
+            </button>
+          </div>
+          {searchErr && <p className="mt-1 text-xs text-red-600">{searchErr}</p>}
+
+          {candidates.length > 1 && !selected && (
+            <div className="mt-2 grid gap-1">
+              {candidates.map((c) => (
+                <button
+                  key={`${c.fid}-${c.analyst_name || ''}`}
+                  onClick={() => setSelected(c)}
+                  className="rounded border border-neutral-200 px-2 py-1.5 text-left text-xs hover:bg-neutral-50"
+                >
+                  {c.company_name} — {c.company_code}
+                  {c.analyst_name ? ` (${c.analyst_name})` : ''}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {selected && (
+            <div className="mt-2 flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+              <span>
+                Valittu: {selected.company_name} ({selected.company_code})
+              </span>
+              <button
+                onClick={() => { setSelected(null); setCandidates([]) }}
+                className="font-medium text-emerald-700 hover:underline"
+              >
+                Vaihda
+              </button>
+            </div>
           )}
 
           <label className="mt-4 block text-sm font-medium text-neutral-700">
@@ -252,7 +322,7 @@ export function ExpertApp() {
 
           <button
             onClick={startGeneration}
-            disabled={fid == null || (!me.unlimited && (me.remaining ?? 0) <= 0)}
+            disabled={!selected || (!me.unlimited && (me.remaining ?? 0) <= 0)}
             className="mt-4 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-40"
           >
             {!me.unlimited && (me.remaining ?? 0) <= 0 ? 'Kiintiö käytetty' : 'Tuota arvonmääritys'}
@@ -270,28 +340,42 @@ export function ExpertApp() {
 
       {reportSrc && (
         <div className="mt-6">
-          {clarifications.length > 0 && (
-            <ClarifyPanel busy={busy} requests={clarifications} onSubmit={startRound2} />
-          )}
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => downloadPdf(false)}
-              className="rounded-lg bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700"
-            >
-              Lataa PDF
-            </button>
-            <button
-              onClick={() => downloadPdf(true)}
-              className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-100"
-            >
-              Avaa PDF uuteen välilehteen
-            </button>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold text-neutral-900">
+              {isRefinedVersion ? 'Tarkennettu versio' : 'Ensimmäinen versio'}
+            </h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => downloadPdf(false)}
+                className="rounded-lg bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700"
+              >
+                Lataa PDF
+              </button>
+              <button
+                onClick={() => downloadPdf(true)}
+                className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-100"
+              >
+                Avaa PDF uuteen välilehteen
+              </button>
+            </div>
           </div>
           <iframe
             title="Raportti"
             srcDoc={reportSrc}
             className="mt-3 h-[80vh] w-full rounded-lg border border-neutral-200 bg-white"
           />
+
+          {clarifications.length > 0 && (
+            <div className="mt-4">
+              <h3 className="text-sm font-semibold text-neutral-900">Haluatko tarkentaa raporttia?</h3>
+              <p className="mt-0.5 text-xs text-neutral-500">
+                Lue raportti yllä ensin — vastaa alle mihin haluat, tai kirjoita vapaasti mitä
+                tekoäly ei osannut kysyä.
+              </p>
+              <ClarifyPanel busy={busy} requests={clarifications} onSubmit={startRound2} />
+            </div>
+          )}
+
           <button
             onClick={resetRun}
             className="mt-4 text-sm text-emerald-700 hover:underline"
@@ -362,7 +446,7 @@ function ClarifyPanel({
     Object.values(answers).filter((v) => v.trim()).length + (freeText.trim() ? 1 : 0)
 
   return (
-    <div className="rounded-lg border border-amber-300 bg-amber-50 p-4">
+    <div className="mt-2 rounded-lg border border-amber-300 bg-amber-50 p-4">
       <div className="text-sm font-semibold text-amber-900">Täydennä ja tarkenna</div>
       <p className="mt-0.5 text-xs text-amber-700">
         AI ei voinut varmentaa näitä. Vastaa mihin voit — tarkennettu raportti (kierros 2) ei

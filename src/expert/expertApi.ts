@@ -21,6 +21,14 @@ export type SavedCompany = {
   company_code: string | null
 }
 
+export type CompanyCandidate = {
+  fid: number
+  company_name: string | null
+  company_code: string | null
+  industry_text: string | null
+  analyst_name: string | null
+}
+
 export type ClarificationRequest = {
   id: string
   question: string
@@ -37,6 +45,17 @@ export async function validateKey(key: string): Promise<ExpertMe | null> {
 export async function listCompanies(key: string): Promise<SavedCompany[]> {
   const r = await fetch(`${API}/api/companies`, { headers: auth(key) })
   return r.ok ? r.json() : []
+}
+
+// Resolve a company name or y-tunnus to Valuatum FID(s) — this is what lets
+// an expert type ANY company instead of picking from the operator's
+// pre-fetched list (the former FID blocker).
+export async function searchCompany(key: string, q: string): Promise<CompanyCandidate[]> {
+  const r = await fetch(`${API}/api/company-search?q=${encodeURIComponent(q)}`, {
+    headers: auth(key),
+  })
+  if (!r.ok) throw new Error((await r.text()) || `HTTP ${r.status}`)
+  return r.json()
 }
 
 export async function generate(
