@@ -398,6 +398,17 @@ export function ExpertApp() {
 
       {reportSrc && (
         <div className="mt-6">
+          {clarifications.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-neutral-900">Haluatko tarkentaa raporttia?</h3>
+              <p className="mt-0.5 text-xs text-neutral-500">
+                Lue raportti alla ensin — vastaa alle mihin haluat, tai kirjoita vapaasti mitä
+                tekoäly ei osannut kysyä.
+              </p>
+              <ClarifyPanel busy={busy} requests={clarifications} onSubmit={startRound2} />
+            </div>
+          )}
+
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-semibold text-neutral-900">
               {isRefinedVersion ? 'Tarkennettu versio' : 'Ensimmäinen versio'}
@@ -422,17 +433,6 @@ export function ExpertApp() {
             srcDoc={reportSrc}
             className="mt-3 h-[80vh] w-full rounded-lg border border-neutral-200 bg-white"
           />
-
-          {clarifications.length > 0 && (
-            <div className="mt-4">
-              <h3 className="text-sm font-semibold text-neutral-900">Haluatko tarkentaa raporttia?</h3>
-              <p className="mt-0.5 text-xs text-neutral-500">
-                Lue raportti yllä ensin — vastaa alle mihin haluat, tai kirjoita vapaasti mitä
-                tekoäly ei osannut kysyä.
-              </p>
-              <ClarifyPanel busy={busy} requests={clarifications} onSubmit={startRound2} />
-            </div>
-          )}
 
           <button
             onClick={resetRun}
