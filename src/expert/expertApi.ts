@@ -90,15 +90,46 @@ export async function getRun(key: string, rid: string): Promise<any> {
   return r.json()
 }
 
-export async function round2(
+type Round2Body = {
+  clarifications: { id: string; question: string; answer: string }[]
+  clarifications_free_text: string
+}
+
+// Thrown by round2() when the free-round cap (429) is hit, so the UI can
+// offer the paid extra-round flow instead of a bare error.
+export class Round2CapReachedError extends Error {}
+
+export async function round2(key: string, rid: string, body: Round2Body): Promise<{ run_id: string }> {
+  const r = await fetch(`${API}/api/runs/${rid}/round2`, {
+    method: 'POST',
+    headers: jsonAuth(key),
+    body: JSON.stringify(body),
+  })
+  if (r.status === 429) throw new Round2CapReachedError(await r.text())
+  if (!r.ok) throw new Error((await r.text()) || `HTTP ${r.status}`)
+  return r.json()
+}
+
+// Paid extra round (round 3+): create a Stripe Checkout Session for one
+// refinement past the free cap. Redirect the browser to checkout_url.
+export async function round2Checkout(key: string, rid: string, body: Round2Body): Promise<{ checkout_url: string }> {
+  const r = await fetch(`${API}/api/runs/${rid}/round2/checkout`, {
+    method: 'POST',
+    headers: jsonAuth(key),
+    body: JSON.stringify(body),
+  })
+  if (!r.ok) throw new Error((await r.text()) || `HTTP ${r.status}`)
+  return r.json()
+}
+
+// Called after Stripe redirects back with ?paid_round_token=&session_id= —
+// verifies payment server-side and actually starts the paid round.
+export async function round2Redeem(
   key: string,
   rid: string,
-  body: {
-    clarifications: { id: string; question: string; answer: string }[]
-    clarifications_free_text: string
-  }
+  body: { token: string; stripe_session_id: string }
 ): Promise<{ run_id: string }> {
-  const r = await fetch(`${API}/api/runs/${rid}/round2`, {
+  const r = await fetch(`${API}/api/runs/${rid}/round2/redeem`, {
     method: 'POST',
     headers: jsonAuth(key),
     body: JSON.stringify(body),

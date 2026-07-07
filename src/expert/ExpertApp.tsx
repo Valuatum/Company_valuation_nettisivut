@@ -5,11 +5,14 @@ import {
   type ClarificationRequest,
   type CompanyCandidate,
   type ExpertMe,
+  Round2CapReachedError,
   generate,
   getRun,
   reportHtml,
   reportPdf,
   round2,
+  round2Checkout,
+  round2Redeem,
   searchCompany,
   validateKey,
 } from './expertApi'
@@ -34,16 +37,33 @@ export function ExpertApp() {
   const [busy, setBusy] = useState(false)
   const [reportSrc, setReportSrc] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Free rounds (2) used up: hold the answers the user just typed so the
+  // "buy extra round" button can send the same payload to checkout.
+  const [capReachedPayload, setCapReachedPayload] = useState<{
+    answers: { id: string; question: string; answer: string }[]
+    freeText: string
+  } | null>(null)
+  const [buying, setBuying] = useState(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Entry points: an emailed/on-screen link carries ?key=&rid= straight to a
-  // specific report (the paid checkout flow mints a single-use key per
-  // order); otherwise restore a previously signed-in key from localStorage.
+  // Entry points, checked in order:
+  // 1. Stripe just redirected back from a paid-extra-round checkout
+  //    (?paid_round_token=&session_id=&rid=&key=) — redeem the payment and
+  //    start that round.
+  // 2. An emailed/on-screen link carries ?key=&rid= straight to a specific
+  //    report (the paid checkout flow mints a single-use key per order).
+  // 3. Otherwise restore a previously signed-in key from localStorage.
   useEffect(() => {
     if (typeof window === 'undefined') return
     const params = new URLSearchParams(window.location.search)
     const urlKey = params.get('key')
     const urlRid = params.get('rid')
+    const paidToken = params.get('paid_round_token')
+    const sessionId = params.get('session_id')
+    if (urlKey && urlRid && paidToken && sessionId) {
+      void resumePaidRound(urlKey, urlRid, paidToken, sessionId)
+      return
+    }
     if (urlKey && urlRid) {
       void resumeFromLink(urlKey, urlRid)
       return
@@ -76,6 +96,29 @@ export function ExpertApp() {
       }
     } catch (e: any) {
       setError('Raporttia ei löytynyt: ' + (e?.message || e))
+    }
+  }
+
+  async function resumePaidRound(k: string, rid: string, token: string, sessionId: string) {
+    setError(null)
+    const info = await validateKey(k)
+    if (!info) {
+      setError('Avain ei kelpaa tai on käytetty loppuun.')
+      return
+    }
+    localStorage.setItem(KEY_STORAGE, k)
+    setKey(k)
+    setMe(info)
+    setBusy(true)
+    try {
+      const { run_id } = await round2Redeem(k, rid, { token, stripe_session_id: sessionId })
+      setRunId(run_id)
+      poll(run_id, k)
+    } catch (e: any) {
+      setBusy(false)
+      setError('Maksettua lisäkierrosta ei voitu käynnistää: ' + (e?.message || e))
+      // Fall back to showing the original report so the page isn't just an error.
+      await resumeFromLink(k, rid)
     }
   }
 
@@ -232,18 +275,39 @@ export function ExpertApp() {
   ) {
     if (!runId) return
     setBusy(true)
-    setReportSrc(null)
     setError(null)
+    setCapReachedPayload(null)
     try {
       const { run_id } = await round2(key, runId, {
         clarifications: answers,
         clarifications_free_text: freeText,
       })
+      setReportSrc(null)
       setRunId(run_id)
       poll(run_id)
     } catch (e: any) {
       setBusy(false)
-      setError(e?.message || String(e))
+      if (e instanceof Round2CapReachedError) {
+        setCapReachedPayload({ answers, freeText })
+      } else {
+        setError(e?.message || String(e))
+      }
+    }
+  }
+
+  async function buyExtraRound() {
+    if (!runId || !capReachedPayload) return
+    setBuying(true)
+    setError(null)
+    try {
+      const { checkout_url } = await round2Checkout(key, runId, {
+        clarifications: capReachedPayload.answers,
+        clarifications_free_text: capReachedPayload.freeText,
+      })
+      window.location.href = checkout_url
+    } catch (e: any) {
+      setBuying(false)
+      setError('Maksun käynnistys epäonnistui: ' + (e?.message || e))
     }
   }
 
@@ -398,15 +462,43 @@ export function ExpertApp() {
 
       {reportSrc && (
         <div className="mt-6">
-          {clarifications.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-neutral-900">Haluatko tarkentaa raporttia?</h3>
-              <p className="mt-0.5 text-xs text-neutral-500">
-                Lue raportti alla ensin — vastaa alle mihin haluat, tai kirjoita vapaasti mitä
-                tekoäly ei osannut kysyä.
+          {capReachedPayload ? (
+            <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4">
+              <div className="text-sm font-semibold text-amber-900">
+                Kaksi maksutonta tarkennuskierrosta on käytetty
+              </div>
+              <p className="mt-0.5 text-xs text-amber-700">
+                Vastauksesi on tallessa. Lisätarkennuskierros maksaa 5 € — se käynnistyy heti
+                maksun jälkeen ja saat päivitetyn raportin samaan tapaan kuin edelliset.
               </p>
-              <ClarifyPanel busy={busy} requests={clarifications} onSubmit={startRound2} />
+              <div className="mt-3 flex items-center gap-3">
+                <button
+                  onClick={buyExtraRound}
+                  disabled={buying}
+                  className="rounded bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-500 disabled:opacity-40"
+                >
+                  {buying ? 'Siirrytään maksuun…' : 'Osta lisäkierros — 5 €'}
+                </button>
+                <button
+                  onClick={() => setCapReachedPayload(null)}
+                  disabled={buying}
+                  className="text-xs text-amber-700 hover:underline disabled:opacity-40"
+                >
+                  Muokkaa vastauksia
+                </button>
+              </div>
             </div>
+          ) : (
+            clarifications.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-neutral-900">Haluatko tarkentaa raporttia?</h3>
+                <p className="mt-0.5 text-xs text-neutral-500">
+                  Lue raportti alla ensin — vastaa alle mihin haluat, tai kirjoita vapaasti mitä
+                  tekoäly ei osannut kysyä.
+                </p>
+                <ClarifyPanel busy={busy} requests={clarifications} onSubmit={startRound2} />
+              </div>
+            )
           )}
 
           <div className="flex flex-wrap items-center justify-between gap-2">
