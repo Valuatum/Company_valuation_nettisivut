@@ -1,15 +1,18 @@
 # Handoff — 2026-07-07 (read this first)
 
-Commit `c9565fa`. CEO feedback on `/testi`: never saw the round-1 report
-(only clarifying questions + round-2 result), and no free-text company
-entry. Both fixed in `src/expert/ExpertApp.tsx` + `src/expert/expertApi.ts`
-— full detail, verification notes, and what's still owed (a real live
-click-through, email delivery) are written up in the **backend repo's**
-`../AI-company-valuation-raportti/HANDOFF.md` (read that one first, this
-session touched both repos as one unit). Build + typecheck clean
-(`npm run build`). ⛔ Do not trigger a real report generation from this
-site against prod without asking the user first — see that repo's
-`CLAUDE.md`.
+Commit `c9565fa` plus the latest continuation commit. CEO feedback on `/testi`:
+never saw the round-1 report (only clarifying questions + round-2 result), and
+no free-text company entry. Fixed in `src/expert/ExpertApp.tsx` +
+`src/expert/expertApi.ts`; continuation also forwards `industry_text`,
+`industry_code`, `industry_id`, and `industry_tree` from `/api/company-search`
+to the backend and adds an optional delivery email field for the new backend
+Resend scaffold. Full detail, verification notes, and what's still owed (real
+live click-through, Resend env configuration) are written up in the **backend
+repo's** `../AI-company-valuation-raportti/HANDOFF.md` (read that one first,
+this session touched both repos as one unit). Build + typecheck clean
+(`npm.cmd run build` on Windows; plain `npm run build` is blocked by local
+PowerShell policy). ⛔ Do not trigger a real report generation from this site
+against prod without asking the user first — see that repo's `CLAUDE.md`.
 
 Also: `next dev` (Turbopack) fails on this machine's real repo path (spaces
 in `Lauri H` / `Valuatum projektit`) — see the backend HANDOFF's browser-

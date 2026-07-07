@@ -26,6 +26,9 @@ export type CompanyCandidate = {
   company_name: string | null
   company_code: string | null
   industry_text: string | null
+  industry_code: string | null
+  industry_id: unknown | null
+  industry_tree: unknown | null
   analyst_name: string | null
 }
 
@@ -60,7 +63,17 @@ export async function searchCompany(key: string, q: string): Promise<CompanyCand
 
 export async function generate(
   key: string,
-  body: { fid: number; company_name: string; company_code?: string | null; user_input?: string }
+  body: {
+    fid: number
+    company_name: string
+    company_code?: string | null
+    industry_text?: string | null
+    industry_code?: string | null
+    industry_id?: unknown | null
+    industry_tree?: unknown | null
+    delivery_email?: string | null
+    user_input?: string
+  }
 ): Promise<{ run_id: string }> {
   const r = await fetch(`${API}/api/expert/generate`, {
     method: 'POST',

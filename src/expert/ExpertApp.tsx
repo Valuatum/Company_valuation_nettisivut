@@ -26,6 +26,7 @@ export function ExpertApp() {
   const [selected, setSelected] = useState<CompanyCandidate | null>(null)
   const [searching, setSearching] = useState(false)
   const [searchErr, setSearchErr] = useState<string | null>(null)
+  const [deliveryEmail, setDeliveryEmail] = useState('')
   const [userInput, setUserInput] = useState('')
 
   const [runId, setRunId] = useState<string | null>(null)
@@ -73,6 +74,7 @@ export function ExpertApp() {
     setCandidates([])
     setSelected(null)
     setSearchErr(null)
+    setDeliveryEmail('')
     setUserInput('')
   }
 
@@ -158,6 +160,11 @@ export function ExpertApp() {
         fid: company.fid,
         company_name: company.company_name || query.trim(),
         company_code: company.company_code,
+        industry_text: company.industry_text,
+        industry_code: company.industry_code,
+        industry_id: company.industry_id,
+        industry_tree: company.industry_tree,
+        delivery_email: deliveryEmail.trim() || undefined,
         user_input: userInput.trim() || undefined,
       })
       setRunId(run_id)
@@ -289,6 +296,7 @@ export function ExpertApp() {
                   className="rounded border border-neutral-200 px-2 py-1.5 text-left text-xs hover:bg-neutral-50"
                 >
                   {c.company_name} — {c.company_code}
+                  {c.industry_text ? ` · ${c.industry_text}` : ''}
                   {c.analyst_name ? ` (${c.analyst_name})` : ''}
                 </button>
               ))}
@@ -299,6 +307,7 @@ export function ExpertApp() {
             <div className="mt-2 flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
               <span>
                 Valittu: {selected.company_name} ({selected.company_code})
+                {selected.industry_text ? ` · ${selected.industry_text}` : ''}
               </span>
               <button
                 onClick={() => { setSelected(null); setCandidates([]) }}
@@ -308,6 +317,17 @@ export function ExpertApp() {
               </button>
             </div>
           )}
+
+          <label className="mt-4 block text-sm font-medium text-neutral-700">
+            Sähköposti raportille (valinnainen)
+          </label>
+          <input
+            value={deliveryEmail}
+            onChange={(e) => setDeliveryEmail(e.target.value)}
+            type="email"
+            placeholder="nimi@yritys.fi"
+            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+          />
 
           <label className="mt-4 block text-sm font-medium text-neutral-700">
             Lisätiedot (valinnainen)
