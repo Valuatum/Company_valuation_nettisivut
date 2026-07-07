@@ -1,3 +1,23 @@
+# Handoff — 2026-07-07 (read this first)
+
+Commit `c9565fa`. CEO feedback on `/testi`: never saw the round-1 report
+(only clarifying questions + round-2 result), and no free-text company
+entry. Both fixed in `src/expert/ExpertApp.tsx` + `src/expert/expertApi.ts`
+— full detail, verification notes, and what's still owed (a real live
+click-through, email delivery) are written up in the **backend repo's**
+`../AI-company-valuation-raportti/HANDOFF.md` (read that one first, this
+session touched both repos as one unit). Build + typecheck clean
+(`npm run build`). ⛔ Do not trigger a real report generation from this
+site against prod without asking the user first — see that repo's
+`CLAUDE.md`.
+
+Also: `next dev` (Turbopack) fails on this machine's real repo path (spaces
+in `Lauri H` / `Valuatum projektit`) — see the backend HANDOFF's browser-
+tooling notes for the spaceless-copy workaround (`C:\dev\nettisivut`,
+already wired into `.claude/launch.json`).
+
+---
+
 # Handoff — 2026-07-03
 
 Pushed as commit `f480342` on `main`. Build + typecheck clean, purchase flow
