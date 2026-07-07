@@ -117,7 +117,7 @@ export const yrityskauppaPage: ContentPageData = {
     {
       "heading": "Mitä arvonmääritys maksaa yrityskaupassa?",
       "paragraphs": [
-        "Yksittäinen raportti maksaa 79 € + alv ja toimitetaan PDF:nä sähköpostiin yleensä 30–60 minuutissa. Kolmen raportin paketti (199 € + alv) sopii ostajalle tai neuvonantajalle, joka vertailee useampaa kohdetta. Hinnat ovat yrityksille vähennyskelpoisia asiantuntijakuluja — katso tarkemmin [hinnoittelu](/#hinnoittelu).",
+        "Yksittäinen raportti maksaa 79 € + alv ja valmistuu tyypillisesti 10–20 minuutissa, kun tilinpäätöstiedot ovat jo hallussamme — näet edistymisen selaimessa ja saat raportin myös sähköpostiisi. Kolmen raportin paketti (199 € + alv, tulossa) sopii ostajalle tai neuvonantajalle, joka vertailee useampaa kohdetta. Hinnat ovat yrityksille vähennyskelpoisia asiantuntijakuluja — katso tarkemmin [hinnoittelu](/#hinnoittelu).",
         "Laadun voi arvioida ennen ostamista: [esimerkkiraportit](/#esimerkit) ovat avattavissa maksutta ilman rekisteröitymistä. Kun olet valmis, [tilaa raportti](/yritys) yrityksen nimellä tai Y-tunnuksella."
       ],
       "listItems": [],
@@ -150,9 +150,9 @@ export const yrityskauppaPage: ContentPageData = {
     },
     {
       "question": "Kuinka nopeasti saan raportin neuvotteluja varten?",
-      "answer": "Raportti toimitetaan PDF:nä sähköpostiin yleensä 30–60 minuutissa tilauksesta. Laadun voi arvioida etukäteen maksuttomista esimerkkiraporteista, joihin kuuluu julkisista tiedoista laadittu raportti Supercell Oy:stä."
+      "answer": "Kun tilinpäätöstiedot ovat jo hallussamme, raportti alkaa syntyä heti maksun jälkeen ja valmistuu tyypillisesti 10–20 minuutissa — sekä selaimessa että sähköpostiisi PDF:nä. Laadun voi arvioida etukäteen maksuttomista esimerkkiraporteista, joihin kuuluu julkisista tiedoista laadittu raportti Supercell Oy:stä."
     }
   ],
   "ctaHeading": "Selvitä yrityksen arvo ennen neuvottelupöytää",
-  "ctaText": "Tilaa AI-arvonmääritysraportti 79 € + alv. Saat perustellun arvostusvälin, skenaariot, riskit ja menetelmäperustelut PDF:nä sähköpostiin yleensä 30–60 minuutissa. Katso ensin laatu maksuttomista esimerkkiraporteista."
+  "ctaText": "Tilaa AI-arvonmääritysraportti 79 € + alv. Saat perustellun arvostusvälin, skenaariot, riskit ja menetelmäperustelut — tyypillisesti 10–20 minuutissa, sekä selaimessa että sähköpostiisi PDF:nä. Katso ensin laatu maksuttomista esimerkkiraporteista."
 } as ContentPageData

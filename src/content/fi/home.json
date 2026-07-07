@@ -22,8 +22,8 @@
         "label": "Katso esimerkkiraportti",
         "href": "#esimerkit"
       },
-      "formNote": "Raportti toimitetaan sähköpostiin. Automaattinen selainraportti tulossa.",
-      "statusNote": "Automaattinen generointi tulossa. Ensimmäiset raportit toimitetaan sähköpostiin.",
+      "formNote": "Raportti alkaa syntyä heti maksun jälkeen — seuraat sitä selaimessa ja saat sen myös sähköpostiisi.",
+      "statusNote": "Raportti valmistuu tyypillisesti 10–20 minuutissa. Kaksi tarkennuskierrosta sisältyy hintaan.",
       "badges": [
         {
           "id": "badge-pdf",
@@ -298,26 +298,26 @@
       "steps": [
         {
           "id": "step-1",
-          "title": "Syötä yrityksen nimi tai Y-tunnus",
-          "description": "Kerro, mistä yrityksestä haluat raportin. Sähköpostiosoite riittää toimitukseen."
+          "title": "Hae yritys ja kerro lisätiedot",
+          "description": "Syötä yrityksen nimi tai Y-tunnus. Voit halutessasi kertoa myös tietoja, joita tekoäly ei löydä julkisista lähteistä."
         },
         {
           "id": "step-2",
-          "title": "Valitse raportti ja maksa",
-          "description": "Valitse yksittäinen raportti tai paketti. Saat tilausvahvistuksen sähköpostiin."
+          "title": "Maksa ja raportti alkaa syntyä heti",
+          "description": "Kun tilinpäätöstiedot ovat jo hallussamme, generointi käynnistyy automaattisesti maksun jälkeen — ei odottelua operaattorin vuoroa."
         },
         {
           "id": "step-3",
-          "title": "Valuatum tuottaa AI-arvonmääritysraportin",
-          "description": "Yhdistämme tilinpäätösdatan, arvonmäärityslogiikan ja AI:n tuottaman analyysitekstin."
+          "title": "Seuraa edistymistä ja tarkenna tarvittaessa",
+          "description": "Näet raportin syntyvän selaimessa. Tekoäly voi kysyä tarkentavia kysymyksiä — kaksi tarkennuskierrosta sisältyy hintaan, lisäkierrokset 5 €/kpl."
         },
         {
           "id": "step-4",
-          "title": "Saat PDF-raportin sähköpostiin",
-          "description": "Valmis raportti toimitetaan sähköpostiisi tyypillisesti 30–60 minuutissa."
+          "title": "Saat valmiin raportin selaimeen ja sähköpostiin",
+          "description": "Raportti valmistuu tyypillisesti 10–20 minuutissa PDF-muodossa, sekä selaimessa että sähköpostiisi."
         }
       ],
-      "note": "Ensimmäisessä julkaisussa raportit toimitetaan sähköpostiin. Automaattinen generointi suoraan selaimessa lisätään myöhemmin."
+      "note": "Jos tilinpäätöstietoja ei vielä ole meillä, lataat ne itse tai haemme ne puolestasi maksun jälkeen — silloin raportti valmistuu manuaalisen käsittelyn kautta hieman pidemmässä ajassa."
     },
     {
       "id": "pricing",
@@ -350,12 +350,13 @@
           "price": "79 €",
           "priceSuffix": "+ alv",
           "badge": "Launch-hinta",
-          "description": "Yksi yrityskohtainen PDF-raportti. Toimitus sähköpostiin. 79 € kun tilinpäätöstiedot ovat valmiina saatavilla.",
+          "description": "Yksi yrityskohtainen PDF-raportti. 79 € kun tilinpäätöstiedot ovat jo hallussamme — generointi käynnistyy automaattisesti heti maksun jälkeen.",
           "features": [
             "Arvo ja arvostusväli",
             "Menetelmät perusteluineen",
             "Riskit ja arvon ajurit",
-            "Toimitus 30–60 minuutissa",
+            "Valmis 10–20 minuutissa, näet edistymisen selaimessa",
+            "2 tarkennuskierrosta sisältyy, lisäkierrokset 5 €/kpl",
             "Omat tilinpäätökset liitteenä: 99 € (79 € jos sallit tietojen jakamisen)",
             "Tietojen haku puolestasi: 129 €"
           ],
@@ -368,15 +369,15 @@
           "name": "3 raportin paketti",
           "price": "199 €",
           "priceSuffix": "+ alv",
-          "badge": "",
-          "description": "Sopii ostajille, tilitoimistoille ja konsulteille, jotka vertailevat useampaa yritystä.",
+          "badge": "Tulossa",
+          "description": "Sopii ostajille, tilitoimistoille ja konsulteille, jotka vertailevat useampaa yritystä. Ei vielä tilattavissa suoraan — ota yhteyttä.",
           "features": [
             "Kolme yrityskohtaista raporttia",
             "Käytä 12 kuukauden sisällä",
             "Sama sisältö kuin yksittäisessä"
           ],
-          "ctaLabel": "Tilaa paketti",
-          "ctaHref": "/yritys",
+          "ctaLabel": "Kysy pakettia",
+          "ctaHref": "mailto:company-valuation@valuatum.com?subject=Kysely%3A%203%20raportin%20paketti",
           "highlighted": false
         },
         {
@@ -471,7 +472,7 @@
         {
           "id": "faq-delivery",
           "question": "Kuinka nopeasti raportti toimitetaan?",
-          "answer": "Ensimmäisessä julkaisussa raportit toimitetaan sähköpostiin tyypillisesti 30–60 minuutissa tilauksesta. Automaattinen generointi suoraan selaimessa lisätään myöhemmin."
+          "answer": "Kun tilinpäätöstiedot ovat jo hallussamme, raportti alkaa syntyä automaattisesti heti maksun jälkeen ja valmistuu tyypillisesti 10–20 minuutissa — näet edistymisen suoraan selaimessa ja saat raportin myös sähköpostiisi. Jos toimitat tai haet tilinpäätökset erikseen, käsittely kestää hieman pidempään."
         },
         {
           "id": "faq-data-quality",
@@ -486,12 +487,12 @@
         {
           "id": "faq-multiple",
           "question": "Voinko tilata useamman raportin?",
-          "answer": "Kyllä. Kolmen raportin paketti sopii useamman kohteen vertailuun. Suuremmista määristä, integraatioista tai white-label-käytöstä saat tarjouksen ottamalla yhteyttä."
+          "answer": "Kyllä, tilaa useampi raportti erikseen samalla hinnalla per yritys. Kolmen raportin paketti (199 €) on tulossa suoraan tilattavaksi — ota toistaiseksi yhteyttä, jos haluat sen jo nyt. Suuremmista määristä, integraatioista tai white-label-käytöstä saat tarjouksen."
         },
         {
-          "id": "faq-automation",
-          "question": "Tuleeko automaattinen generointi selaimeen myöhemmin?",
-          "answer": "Kyllä, se on kehityksessä. Ensimmäisessä vaiheessa raportit toimitetaan sähköpostiin, jotta jokaisen raportin laatu voidaan varmistaa. Selaimessa toimiva automaattinen generointi julkaistaan myöhemmin."
+          "id": "faq-clarify",
+          "question": "Mitä jos tekoäly tarvitsee lisätietoja kesken raportin?",
+          "answer": "Jos jokin jää tekoälylle epäselväksi, se kysyy tarkentavia kysymyksiä valmiin raportin yhteydessä. Voit vastata suoraan selaimessa — kaksi tarkennuskierrosta sisältyy hintaan, ja raportti päivittyy vastaustesi pohjalta. Sen jälkeen lisäkierrokset maksavat 5 € per kierros."
         }
       ]
     },

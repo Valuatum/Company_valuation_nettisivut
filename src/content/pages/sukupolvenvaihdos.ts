@@ -151,9 +151,9 @@ export const sukupolvenvaihdosPage: ContentPageData = {
     },
     {
       "question": "Mitä raportti maksaa ja miten saan sen?",
-      "answer": "Yksittäinen raportti maksaa 79 € + alv ja kolmen raportin paketti 199 € + alv. PDF-raportti toimitetaan sähköpostiin yleensä 30–60 minuutissa. Laadun näet ennen ostamista maksuttomista esimerkkiraporteista, joihin kuuluu julkisista tiedoista laadittu Supercell Oy:n raportti."
+      "answer": "Yksittäinen raportti maksaa 79 € + alv ja valmistuu tyypillisesti 10–20 minuutissa, sekä selaimessa että sähköpostiisi PDF:nä. Kolmen raportin paketti (199 € + alv) on tulossa. Laadun näet ennen ostamista maksuttomista esimerkkiraporteista, joihin kuuluu julkisista tiedoista laadittu Supercell Oy:n raportti."
     }
   ],
   "ctaHeading": "Selvitä yrityksen arvo ajoissa — ennen kuin sukupolvenvaihdos on käsillä.",
-  "ctaText": "Syötä yrityksen nimi tai Y-tunnus ja [tilaa raportti](/yritys) hintaan 79 € + alv. Saat perustellun arvostusvälin, skenaariot ja arvon ajurit PDF-raporttina sähköpostiisi yleensä 30–60 minuutissa. Laadun näet ennen ostamista [esimerkkiraporteista](/#esimerkit)."
+  "ctaText": "Syötä yrityksen nimi tai Y-tunnus ja [tilaa raportti](/yritys) hintaan 79 € + alv. Saat perustellun arvostusvälin, skenaariot ja arvon ajurit — tyypillisesti 10–20 minuutissa, sekä selaimessa että sähköpostiisi PDF-raporttina. Laadun näet ennen ostamista [esimerkkiraporteista](/#esimerkit)."
 } as ContentPageData
