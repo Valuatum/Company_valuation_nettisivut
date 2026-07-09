@@ -271,7 +271,8 @@ export function ExpertApp() {
 
   async function startRound2(
     answers: { id: string; question: string; answer: string }[],
-    freeText: string
+    freeText: string,
+    showOldNumbers: boolean
   ) {
     if (!runId) return
     setBusy(true)
@@ -281,6 +282,7 @@ export function ExpertApp() {
       const { run_id } = await round2(key, runId, {
         clarifications: answers,
         clarifications_free_text: freeText,
+        show_old_numbers: showOldNumbers,
       })
       setReportSrc(null)
       setRunId(run_id)
@@ -595,11 +597,13 @@ function ClarifyPanel({
   busy: boolean
   onSubmit: (
     answers: { id: string; question: string; answer: string }[],
-    freeText: string
+    freeText: string,
+    showOldNumbers: boolean
   ) => void
 }) {
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [freeText, setFreeText] = useState('')
+  const [showOldNumbers, setShowOldNumbers] = useState(false)
   const answered =
     Object.values(answers).filter((v) => v.trim()).length + (freeText.trim() ? 1 : 0)
 
@@ -636,13 +640,24 @@ function ClarifyPanel({
         placeholder="Muuta täydennettävää…"
         className="mt-2 w-full rounded border border-neutral-300 px-2 py-1 text-xs"
       />
+      <label className="mt-2 flex items-center gap-1.5 text-xs text-neutral-600 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={showOldNumbers}
+          onChange={(e) => setShowOldNumbers(e.target.checked)}
+          disabled={busy}
+          className="accent-amber-600"
+        />
+        Näytä vanhat luvut (vanha → uusi)
+      </label>
       <button
         onClick={() =>
           onSubmit(
             requests
               .map((r) => ({ id: r.id, question: r.question, answer: (answers[r.id] || '').trim() }))
               .filter((a) => a.answer),
-            freeText.trim()
+            freeText.trim(),
+            showOldNumbers
           )
         }
         disabled={busy || answered === 0}

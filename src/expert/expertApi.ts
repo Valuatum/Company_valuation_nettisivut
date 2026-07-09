@@ -93,6 +93,7 @@ export async function getRun(key: string, rid: string): Promise<any> {
 type Round2Body = {
   clarifications: { id: string; question: string; answer: string }[]
   clarifications_free_text: string
+  show_old_numbers?: boolean
 }
 
 // Thrown by round2() when the free-round cap (429) is hit, so the UI can
