@@ -367,9 +367,18 @@ export function ExpertApp() {
           <div className="text-sm font-semibold text-neutral-900">
             {me.unlimited ? 'Rajaton käyttö' : `${me.remaining} / ${me.generations_limit} krediittiä`}
           </div>
-          <button onClick={signOut} className="text-xs text-neutral-400 hover:text-neutral-600">
-            Kirjaudu ulos
-          </button>
+          <div className="flex items-center justify-end gap-3">
+            {runId && !busy && (
+              // Always-reachable escape: a failed/finished run otherwise dead-ends
+              // the page (the search form is hidden once runId is set).
+              <button onClick={resetRun} className="text-xs font-medium text-amber-700 hover:text-amber-900">
+                + Aloita uusi
+              </button>
+            )}
+            <button onClick={signOut} className="text-xs text-neutral-400 hover:text-neutral-600">
+              Kirjaudu ulos
+            </button>
+          </div>
         </div>
       </div>
 
