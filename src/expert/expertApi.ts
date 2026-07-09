@@ -128,7 +128,7 @@ export async function round2Checkout(key: string, rid: string, body: Round2Body)
 export async function round2Redeem(
   key: string,
   rid: string,
-  body: { token: string; stripe_session_id: string }
+  body: { token: string; stripe_session_id: string; show_old_numbers?: boolean }
 ): Promise<{ run_id: string }> {
   const r = await fetch(`${API}/api/runs/${rid}/round2/redeem`, {
     method: 'POST',

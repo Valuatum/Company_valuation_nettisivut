@@ -42,6 +42,7 @@ export function ExpertApp() {
   const [capReachedPayload, setCapReachedPayload] = useState<{
     answers: { id: string; question: string; answer: string }[]
     freeText: string
+    showOldNumbers: boolean
   } | null>(null)
   const [buying, setBuying] = useState(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -60,8 +61,9 @@ export function ExpertApp() {
     const urlRid = params.get('rid')
     const paidToken = params.get('paid_round_token')
     const sessionId = params.get('session_id')
+    const showOld = params.get('show_old_numbers') === '1'
     if (urlKey && urlRid && paidToken && sessionId) {
-      void resumePaidRound(urlKey, urlRid, paidToken, sessionId)
+      void resumePaidRound(urlKey, urlRid, paidToken, sessionId, showOld)
       return
     }
     if (urlKey && urlRid) {
@@ -99,7 +101,7 @@ export function ExpertApp() {
     }
   }
 
-  async function resumePaidRound(k: string, rid: string, token: string, sessionId: string) {
+  async function resumePaidRound(k: string, rid: string, token: string, sessionId: string, showOldNumbers: boolean) {
     setError(null)
     const info = await validateKey(k)
     if (!info) {
@@ -111,7 +113,7 @@ export function ExpertApp() {
     setMe(info)
     setBusy(true)
     try {
-      const { run_id } = await round2Redeem(k, rid, { token, stripe_session_id: sessionId })
+      const { run_id } = await round2Redeem(k, rid, { token, stripe_session_id: sessionId, show_old_numbers: showOldNumbers })
       setRunId(run_id)
       poll(run_id, k)
     } catch (e: any) {
@@ -290,7 +292,7 @@ export function ExpertApp() {
     } catch (e: any) {
       setBusy(false)
       if (e instanceof Round2CapReachedError) {
-        setCapReachedPayload({ answers, freeText })
+        setCapReachedPayload({ answers, freeText, showOldNumbers })
       } else {
         setError(e?.message || String(e))
       }
@@ -305,6 +307,7 @@ export function ExpertApp() {
       const { checkout_url } = await round2Checkout(key, runId, {
         clarifications: capReachedPayload.answers,
         clarifications_free_text: capReachedPayload.freeText,
+        show_old_numbers: capReachedPayload.showOldNumbers,
       })
       window.location.href = checkout_url
     } catch (e: any) {
