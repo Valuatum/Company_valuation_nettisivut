@@ -23,7 +23,7 @@
         "href": "#esimerkit"
       },
       "formNote": "Raportti alkaa syntyä heti maksun jälkeen — seuraat sitä selaimessa ja saat sen myös sähköpostiisi.",
-      "statusNote": "Raportti valmistuu tyypillisesti 10–20 minuutissa. Kaksi tarkennuskierrosta sisältyy hintaan.",
+      "statusNote": "Raportti valmistuu tyypillisesti 10–20 minuutissa. Viisi tarkennuskierrosta sisältyy hintaan.",
       "badges": [
         {
           "id": "badge-pdf",
@@ -309,7 +309,7 @@
         {
           "id": "step-3",
           "title": "Seuraa edistymistä ja tarkenna tarvittaessa",
-          "description": "Näet raportin syntyvän selaimessa. Tekoäly voi kysyä tarkentavia kysymyksiä — kaksi tarkennuskierrosta sisältyy hintaan, lisäkierrokset 5 €/kpl."
+          "description": "Näet raportin syntyvän selaimessa. Tekoäly voi kysyä tarkentavia kysymyksiä — viisi tarkennuskierrosta sisältyy hintaan."
         },
         {
           "id": "step-4",
@@ -356,7 +356,7 @@
             "Menetelmät perusteluineen",
             "Riskit ja arvon ajurit",
             "Valmis 10–20 minuutissa, näet edistymisen selaimessa",
-            "2 tarkennuskierrosta sisältyy, lisäkierrokset 5 €/kpl",
+            "5 tarkennuskierrosta sisältyy",
             "Omat tilinpäätökset liitteenä: 99 € (79 € jos sallit tietojen jakamisen)",
             "Tietojen haku puolestasi: 129 €"
           ],
@@ -492,7 +492,7 @@
         {
           "id": "faq-clarify",
           "question": "Mitä jos tekoäly tarvitsee lisätietoja kesken raportin?",
-          "answer": "Jos jokin jää tekoälylle epäselväksi, se kysyy tarkentavia kysymyksiä valmiin raportin yhteydessä. Voit vastata suoraan selaimessa — kaksi tarkennuskierrosta sisältyy hintaan, ja raportti päivittyy vastaustesi pohjalta. Sen jälkeen lisäkierrokset maksavat 5 € per kierros."
+          "answer": "Jos jokin jää tekoälylle epäselväksi, se kysyy tarkentavia kysymyksiä valmiin raportin yhteydessä. Voit vastata suoraan selaimessa — viisi tarkennuskierrosta sisältyy hintaan, ja raportti päivittyy vastaustesi pohjalta."
         }
       ]
     },

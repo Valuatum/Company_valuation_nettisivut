@@ -322,6 +322,15 @@ export function ExpertApp() {
 
   useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current) }, [])
 
+  // Never hardcode the free-round count: it is ROUND2_MAX_PER_RUN on the backend
+  // and has already changed once (2 -> 5). An unlimited key skips the cap entirely.
+  const freeRounds = me?.free_rounds_per_report
+  const roundsNote = me?.unlimited
+    ? ''
+    : freeRounds
+      ? ` (${freeRounds} tarkennuskierrosta sisältyy)`
+      : ''
+
   const results: any[] = run?.results || []
   const clarifications: ClarificationRequest[] =
     (!busy && Array.isArray(results.find((r) => r.order === 1)?.parsed_json?.clarification_requests)
@@ -470,7 +479,7 @@ export function ExpertApp() {
           <p className="mt-2 text-xs text-neutral-500">
             Raportin generointi kestää tyypillisesti 10–20 minuuttia. Valmis raportti sisältää
             tekoälyn tarkentavia kysymyksiä — vastaamalla niihin saat halutessasi tarkennetun
-            version (2 tarkennuskierrosta sisältyy).
+            version{roundsNote}.
           </p>
         </div>
       )}
@@ -603,7 +612,7 @@ function Progress({ results }: { results: any[] }) {
       </div>
       <p className="mt-1.5 text-xs text-emerald-700">
         Valmis raportti sisältää tekoälyn tarkentavia kysymyksiä — vastaamalla niihin saat
-        halutessasi tarkennetun version (2 tarkennuskierrosta sisältyy).
+        halutessasi tarkennetun version.
       </p>
     </div>
   )
