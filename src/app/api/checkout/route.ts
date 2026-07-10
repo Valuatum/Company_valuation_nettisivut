@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto'
 import { NextResponse } from 'next/server'
 import { getStripe, siteUrl } from '@/lib/stripe'
 import { quote, eur, type ReportKind } from '@/lib/pricing'
@@ -46,7 +47,13 @@ export async function POST(req: Request) {
 
   // --- Demo mode: no Stripe key configured -----------------------------------
   if (!stripe) {
-    const params = new URLSearchParams({ demo: '1', kind })
+    // A real Stripe session id is unique per checkout, which is what makes
+    // /kassa/valmis's "idempotent on session id, safe to reload" behavior
+    // correct. Without a nonce here, the demo-mode session id (built from
+    // company+email in kassa/valmis) would be the same on every retry by the
+    // same person for the same company — so a failed attempt (e.g. a spend
+    // cap trip) would be re-shown forever instead of actually retrying.
+    const params = new URLSearchParams({ demo: '1', kind, n: randomUUID() })
     if (companyName) params.set('company', companyName)
     if (businessId) params.set('businessId', businessId)
     if (customerEmail) params.set('email', customerEmail)

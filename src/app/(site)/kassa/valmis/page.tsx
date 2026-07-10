@@ -123,7 +123,11 @@ async function resolveAndPostOrder(sp: Search): Promise<OrderResult> {
   const userInput = param(sp, 'userInput')
   const email = param(sp, 'email')
   const q = quote(kind, param(sp, 'share') === '1')
-  const demoKey = `demo:${kind}:${companyName}:${email}`
+  // `n` (minted once per /api/checkout call, see route.ts) makes this key
+  // unique per checkout attempt, not just per company+email — without it, a
+  // person retrying the same company forever resolves to their first
+  // attempt's run (see the 2026-07-10 Turun Tislaamo incident).
+  const demoKey = `demo:${kind}:${companyName}:${email}:${param(sp, 'n')}`
 
   if (!companyName) return { demo: true, companyName, kindLabel: kindLabels[kind], outcome: 'failed', reportLink: null }
   const { outcome, reportLink } = await fulfil(
