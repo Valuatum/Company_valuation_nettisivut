@@ -23,6 +23,10 @@ export type ExpertMe = {
   generations_limit: number | null
   unlimited: boolean
   remaining: number | null
+  // False when the backend has no Stripe key — /round2/checkout would 503, so
+  // the UI must not offer to sell an extra round. Older backends omit these.
+  paid_rounds_enabled?: boolean
+  free_rounds_per_report?: number
 }
 
 export type SavedCompany = {

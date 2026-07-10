@@ -483,26 +483,31 @@ export function ExpertApp() {
           {capReachedPayload ? (
             <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4">
               <div className="text-sm font-semibold text-amber-900">
-                Kaksi maksutonta tarkennuskierrosta on käytetty
+                {me?.free_rounds_per_report
+                  ? `Maksuttomat tarkennuskierrokset (${me.free_rounds_per_report}) on käytetty`
+                  : 'Maksuttomat tarkennuskierrokset on käytetty'}
               </div>
               <p className="mt-0.5 text-xs text-amber-700">
-                Vastauksesi on tallessa. Lisätarkennuskierros maksaa 5 € — se käynnistyy heti
-                maksun jälkeen ja saat päivitetyn raportin samaan tapaan kuin edelliset.
+                {me?.paid_rounds_enabled
+                  ? 'Vastauksesi on tallessa. Lisätarkennuskierros maksaa 5 € — se käynnistyy heti maksun jälkeen ja saat päivitetyn raportin samaan tapaan kuin edelliset.'
+                  : 'Tämän raportin tarkennuskierrokset on käytetty. Raportti alla on viimeisin versio — voit yhä ladata sen PDF:nä. Jos tarvitset lisää tarkennuksia, ota yhteyttä: excl@valuatum.com'}
               </p>
               <div className="mt-3 flex items-center gap-3">
-                <button
-                  onClick={buyExtraRound}
-                  disabled={buying}
-                  className="rounded bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-500 disabled:opacity-40"
-                >
-                  {buying ? 'Siirrytään maksuun…' : 'Osta lisäkierros — 5 €'}
-                </button>
+                {me?.paid_rounds_enabled && (
+                  <button
+                    onClick={buyExtraRound}
+                    disabled={buying}
+                    className="rounded bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-500 disabled:opacity-40"
+                  >
+                    {buying ? 'Siirrytään maksuun…' : 'Osta lisäkierros — 5 €'}
+                  </button>
+                )}
                 <button
                   onClick={() => setCapReachedPayload(null)}
                   disabled={buying}
                   className="text-xs text-amber-700 hover:underline disabled:opacity-40"
                 >
-                  Muokkaa vastauksia
+                  {me?.paid_rounds_enabled ? 'Muokkaa vastauksia' : 'Sulje'}
                 </button>
               </div>
             </div>

@@ -43,6 +43,10 @@ export type CheckoutGenerateResult = { runId: string; key: string } | null
 // flow: resolves the paid company to a Valuatum FID and starts the pipeline
 // immediately, instead of waiting for an operator to fulfil the order by
 // hand. Idempotent server-side on stripeSessionId.
+//
+// Logs the reason on failure. It used to swallow every error into a bare
+// `null`, and the caller then told the customer "raportti toimitetaan
+// sähköpostiisi" even when nothing had been queued at all.
 export async function postCheckoutGenerate(
   payload: CheckoutGeneratePayload,
 ): Promise<CheckoutGenerateResult> {
@@ -60,10 +64,14 @@ export async function postCheckoutGenerate(
       }),
       cache: 'no-store',
     })
-    if (!r.ok) return null
+    if (!r.ok) {
+      console.error('checkout-generate failed', r.status, (await r.text()).slice(0, 300))
+      return null
+    }
     const data = (await r.json()) as { run_id?: string; key?: string }
     return data.run_id && data.key ? { runId: data.run_id, key: data.key } : null
-  } catch {
+  } catch (err) {
+    console.error('checkout-generate threw', err)
     return null
   }
 }
