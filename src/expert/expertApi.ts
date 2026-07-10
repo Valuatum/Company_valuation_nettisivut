@@ -7,6 +7,16 @@ const API =
 const auth = (key: string) => ({ Authorization: `Bearer ${key}` })
 const jsonAuth = (key: string) => ({ ...auth(key), 'Content-Type': 'application/json' })
 
+// FastAPI errors arrive as `{"detail":"…"}`; surface the human message, not raw JSON.
+async function apiError(r: Response): Promise<Error> {
+  const text = (await r.text()) || `HTTP ${r.status}`
+  try {
+    const detail = JSON.parse(text)?.detail
+    if (typeof detail === 'string' && detail) return new Error(detail)
+  } catch { /* not JSON */ }
+  return new Error(text)
+}
+
 export type ExpertMe = {
   label: string
   generations_used: number
@@ -57,7 +67,7 @@ export async function searchCompany(key: string, q: string): Promise<CompanyCand
   const r = await fetch(`${API}/api/company-search?q=${encodeURIComponent(q)}`, {
     headers: auth(key),
   })
-  if (!r.ok) throw new Error((await r.text()) || `HTTP ${r.status}`)
+  if (!r.ok) throw await apiError(r)
   return r.json()
 }
 
@@ -80,13 +90,13 @@ export async function generate(
     headers: jsonAuth(key),
     body: JSON.stringify(body),
   })
-  if (!r.ok) throw new Error((await r.text()) || `HTTP ${r.status}`)
+  if (!r.ok) throw await apiError(r)
   return r.json()
 }
 
 export async function getRun(key: string, rid: string): Promise<any> {
   const r = await fetch(`${API}/api/runs/${rid}`, { headers: auth(key) })
-  if (!r.ok) throw new Error((await r.text()) || `HTTP ${r.status}`)
+  if (!r.ok) throw await apiError(r)
   return r.json()
 }
 
@@ -107,7 +117,7 @@ export async function round2(key: string, rid: string, body: Round2Body): Promis
     body: JSON.stringify(body),
   })
   if (r.status === 429) throw new Round2CapReachedError(await r.text())
-  if (!r.ok) throw new Error((await r.text()) || `HTTP ${r.status}`)
+  if (!r.ok) throw await apiError(r)
   return r.json()
 }
 
@@ -119,7 +129,7 @@ export async function round2Checkout(key: string, rid: string, body: Round2Body)
     headers: jsonAuth(key),
     body: JSON.stringify(body),
   })
-  if (!r.ok) throw new Error((await r.text()) || `HTTP ${r.status}`)
+  if (!r.ok) throw await apiError(r)
   return r.json()
 }
 
@@ -135,7 +145,7 @@ export async function round2Redeem(
     headers: jsonAuth(key),
     body: JSON.stringify(body),
   })
-  if (!r.ok) throw new Error((await r.text()) || `HTTP ${r.status}`)
+  if (!r.ok) throw await apiError(r)
   return r.json()
 }
 
@@ -143,7 +153,7 @@ export async function reportHtml(key: string, rid: string): Promise<string> {
   const r = await fetch(`${API}/api/runs/${rid}/report.html?force=1`, {
     headers: auth(key),
   })
-  if (!r.ok) throw new Error((await r.text()) || `HTTP ${r.status}`)
+  if (!r.ok) throw await apiError(r)
   return r.text()
 }
 
@@ -151,6 +161,6 @@ export async function reportPdf(key: string, rid: string): Promise<Blob> {
   const r = await fetch(`${API}/api/runs/${rid}/report.pdf?force=1`, {
     headers: auth(key),
   })
-  if (!r.ok) throw new Error((await r.text()) || `HTTP ${r.status}`)
+  if (!r.ok) throw await apiError(r)
   return r.blob()
 }

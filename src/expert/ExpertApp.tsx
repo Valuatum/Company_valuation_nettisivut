@@ -189,7 +189,11 @@ export function ExpertApp() {
       pollRef.current = null
       const errored = (r.results || []).find((x: any) => x.status === 'error')
       if (errored) {
-        setError(`Vaihe ${errored.order} epäonnistui: ${errored.error_message || 'tuntematon virhe'}`)
+        setError(
+          'Raportin tuottaminen epäonnistui teknisen virheen vuoksi. ' +
+          'Käyttämätön krediitti on palautettu — kokeile generointia hetken päästä uudelleen. ' +
+          `(Tekninen syy: vaihe ${errored.order}: ${errored.error_message || 'tuntematon virhe'})`,
+        )
         return
       }
       try {
