@@ -8,11 +8,17 @@ const auth = (key: string) => ({ Authorization: `Bearer ${key}` })
 const jsonAuth = (key: string) => ({ ...auth(key), 'Content-Type': 'application/json' })
 
 // FastAPI errors arrive as `{"detail":"…"}`; surface the human message, not raw JSON.
+// The readiness gate (409) sends `{"detail":{"detail":"…","issues":[…]}}` — show both.
 async function apiError(r: Response): Promise<Error> {
   const text = (await r.text()) || `HTTP ${r.status}`
   try {
     const detail = JSON.parse(text)?.detail
     if (typeof detail === 'string' && detail) return new Error(detail)
+    if (detail && typeof detail === 'object') {
+      const msg = typeof detail.detail === 'string' ? detail.detail : 'raportti ei läpäissyt tarkistuksia'
+      const issues = Array.isArray(detail.issues) ? detail.issues.join('; ') : ''
+      return new Error(issues ? `${msg}: ${issues}` : msg)
+    }
   } catch { /* not JSON */ }
   return new Error(text)
 }
@@ -153,8 +159,10 @@ export async function round2Redeem(
   return r.json()
 }
 
+// No force=1: the backend readiness gate must hold — forcing it showed clients
+// reports whose hard number checks had failed.
 export async function reportHtml(key: string, rid: string): Promise<string> {
-  const r = await fetch(`${API}/api/runs/${rid}/report.html?force=1`, {
+  const r = await fetch(`${API}/api/runs/${rid}/report.html`, {
     headers: auth(key),
   })
   if (!r.ok) throw await apiError(r)
@@ -162,7 +170,7 @@ export async function reportHtml(key: string, rid: string): Promise<string> {
 }
 
 export async function reportPdf(key: string, rid: string): Promise<Blob> {
-  const r = await fetch(`${API}/api/runs/${rid}/report.pdf?force=1`, {
+  const r = await fetch(`${API}/api/runs/${rid}/report.pdf`, {
     headers: auth(key),
   })
   if (!r.ok) throw await apiError(r)
