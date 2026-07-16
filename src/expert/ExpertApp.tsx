@@ -43,6 +43,7 @@ export function ExpertApp() {
     answers: { id: string; question: string; answer: string }[]
     freeText: string
     showOldNumbers: boolean
+    scenarioProbabilities?: { pessimistic: number; base: number; optimistic: number }
   } | null>(null)
   const [buying, setBuying] = useState(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -278,7 +279,8 @@ export function ExpertApp() {
   async function startRound2(
     answers: { id: string; question: string; answer: string }[],
     freeText: string,
-    showOldNumbers: boolean
+    showOldNumbers: boolean,
+    scenarioProbabilities?: { pessimistic: number; base: number; optimistic: number }
   ) {
     if (!runId) return
     setBusy(true)
@@ -289,6 +291,7 @@ export function ExpertApp() {
         clarifications: answers,
         clarifications_free_text: freeText,
         show_old_numbers: showOldNumbers,
+        scenario_probabilities: scenarioProbabilities,
       })
       setReportSrc(null)
       setRunId(run_id)
@@ -296,7 +299,7 @@ export function ExpertApp() {
     } catch (e: any) {
       setBusy(false)
       if (e instanceof Round2CapReachedError) {
-        setCapReachedPayload({ answers, freeText, showOldNumbers })
+        setCapReachedPayload({ answers, freeText, showOldNumbers, scenarioProbabilities })
       } else {
         setError(e?.message || String(e))
       }
@@ -312,6 +315,7 @@ export function ExpertApp() {
         clarifications: capReachedPayload.answers,
         clarifications_free_text: capReachedPayload.freeText,
         show_old_numbers: capReachedPayload.showOldNumbers,
+        scenario_probabilities: capReachedPayload.scenarioProbabilities,
       })
       window.location.href = checkout_url
     } catch (e: any) {
@@ -628,14 +632,27 @@ function ClarifyPanel({
   onSubmit: (
     answers: { id: string; question: string; answer: string }[],
     freeText: string,
-    showOldNumbers: boolean
+    showOldNumbers: boolean,
+    scenarioProbabilities?: { pessimistic: number; base: number; optimistic: number }
   ) => void
 }) {
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [freeText, setFreeText] = useState('')
   const [showOldNumbers, setShowOldNumbers] = useState(false)
+  const [probs, setProbs] = useState({ pessimistic: '', base: '', optimistic: '' })
+  const probsFilled = [probs.pessimistic, probs.base, probs.optimistic].filter(
+    (v) => v.trim() !== ''
+  ).length
+  const probsSum =
+    (parseInt(probs.pessimistic) || 0) +
+    (parseInt(probs.base) || 0) +
+    (parseInt(probs.optimistic) || 0)
+  const probsValid = probsFilled === 3 && probsSum === 100
+  const probsError = probsFilled > 0 && !probsValid
   const answered =
-    Object.values(answers).filter((v) => v.trim()).length + (freeText.trim() ? 1 : 0)
+    Object.values(answers).filter((v) => v.trim()).length +
+    (freeText.trim() ? 1 : 0) +
+    (probsValid ? 1 : 0)
 
   return (
     <div className="mt-2 rounded-lg border border-amber-300 bg-amber-50 p-4">
@@ -662,6 +679,42 @@ function ClarifyPanel({
           </div>
         ))}
       </div>
+      <div className="mt-2 rounded border border-amber-200 bg-white p-2">
+        <div className="text-xs font-medium text-neutral-800">
+          Skenaarioiden todennäköisyydet (valinnainen)
+        </div>
+        <div className="mt-0.5 text-[10px] text-neutral-500">
+          Jätä tyhjäksi = AI valitsee itse. Täytä kaikki kolme, summan oltava 100 %.
+        </div>
+        <div className="mt-1.5 flex items-center gap-2">
+          {(
+            [
+              ['pessimistic', 'Pessimistinen'],
+              ['base', 'Konservatiivinen'],
+              ['optimistic', 'Optimistinen'],
+            ] as const
+          ).map(([k, label]) => (
+            <label key={k} className="flex flex-col text-[10px] text-neutral-600">
+              {label}
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={5}
+                value={probs[k]}
+                onChange={(e) => setProbs((p) => ({ ...p, [k]: e.target.value }))}
+                disabled={busy}
+                placeholder="%"
+                className="mt-0.5 w-16 rounded border border-neutral-300 px-2 py-1 text-xs"
+              />
+            </label>
+          ))}
+          <span className={`text-[10px] ${probsError ? 'text-red-600' : 'text-neutral-500'}`}>
+            {probsFilled > 0 ? `Summa ${probsSum} %` : ''}
+            {probsError ? ' — täytä kaikki kolme, summan oltava 100 %' : ''}
+          </span>
+        </div>
+      </div>
       <textarea
         value={freeText}
         onChange={(e) => setFreeText(e.target.value)}
@@ -687,10 +740,17 @@ function ClarifyPanel({
               .map((r) => ({ id: r.id, question: r.question, answer: (answers[r.id] || '').trim() }))
               .filter((a) => a.answer),
             freeText.trim(),
-            showOldNumbers
+            showOldNumbers,
+            probsValid
+              ? {
+                  pessimistic: parseInt(probs.pessimistic),
+                  base: parseInt(probs.base),
+                  optimistic: parseInt(probs.optimistic),
+                }
+              : undefined
           )
         }
-        disabled={busy || answered === 0}
+        disabled={busy || answered === 0 || probsError}
         className="mt-2 rounded bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-500 disabled:opacity-40"
       >
         Tarkenna raporttia (kierros 2)
