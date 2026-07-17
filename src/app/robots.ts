@@ -4,7 +4,7 @@ import type { MetadataRoute } from 'next'
 // PerplexityBot, Google-Extended) — being citable by AI assistants is a goal.
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [{ userAgent: '*', allow: '/', disallow: ['/editor', '/login', '/api/'] }],
+    rules: [{ userAgent: '*', allow: '/', disallow: ['/api/'] }],
     sitemap: 'https://valuation.fi/sitemap.xml',
   }
 }
