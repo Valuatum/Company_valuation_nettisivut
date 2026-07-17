@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { getPageContent, getSiteSettings } from '@/content/server'
+import { safeJsonLd } from '@/lib/jsonld'
 import { ComparisonSection } from '@/components/sections/ComparisonSection'
 import { FaqSection } from '@/components/sections/FaqSection'
 import { FeatureGridSection } from '@/components/sections/FeatureGridSection'
@@ -68,7 +69,7 @@ export default async function HomePage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd(page)) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd(page)) }}
       />
       {page.sections
         .filter((section) => section.visible)

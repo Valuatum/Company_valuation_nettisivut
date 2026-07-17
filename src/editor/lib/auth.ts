@@ -7,9 +7,13 @@ import { DRAFT_ROOT, EDITOR_SESSION_COOKIE } from '@/content/config'
 
 const SESSIONS_FILE = path.join(process.cwd(), DRAFT_ROOT, 'sessions.json')
 
-// TODO(production): set EDITOR_PASSWORD in Vercel env vars before go-live
-function editorPassword() {
-  return process.env.EDITOR_PASSWORD ?? 'valuatum-editor'
+// Fail closed: with no EDITOR_PASSWORD set, return null so NO password can ever
+// match (createSession rejects every attempt). Previously this fell back to a
+// known default ('valuatum-editor'), which let anyone into the content editor —
+// and editor content is serialized into a JSON-LD <script>, i.e. a stored-XSS
+// surface. Never ship a guessable default for an authentication secret.
+function editorPassword(): string | null {
+  return process.env.EDITOR_PASSWORD || null
 }
 
 async function readSessions(): Promise<Record<string, number>> {
@@ -26,7 +30,8 @@ async function writeSessions(sessions: Record<string, number>) {
 }
 
 export async function createSession(password: string): Promise<string | null> {
-  if (password !== editorPassword()) return null
+  const expected = editorPassword()
+  if (!expected || password !== expected) return null
   const token = crypto.randomBytes(32).toString('hex')
   const sessions = await readSessions()
   sessions[token] = Date.now() + 1000 * 60 * 60 * 12

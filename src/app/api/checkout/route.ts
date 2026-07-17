@@ -72,12 +72,20 @@ export async function POST(req: Request) {
       mode: 'payment',
       payment_method_types: ['card'],
       customer_email: customerEmail || undefined,
+      // The advertised prices are "+ alv" (VAT-exclusive), so Stripe Tax adds
+      // Finnish VAT (25.5%) on top and handles EU B2B reverse charge. Requires
+      // Stripe Tax to be registered/enabled in the dashboard, and a billing
+      // address to compute the rate — hence the address collection below.
+      billing_address_collection: 'required',
+      automatic_tax: { enabled: true },
       line_items: [
         {
           quantity: 1,
           price_data: {
             currency: 'eur',
             unit_amount: q.total,
+            // Amount is pre-tax; Stripe Tax adds VAT on top of it.
+            tax_behavior: 'exclusive',
             product_data: {
               name:
                 kind === 'import'
@@ -106,7 +114,6 @@ export async function POST(req: Request) {
       },
       success_url: `${siteUrl()}${successPath}`,
       cancel_url: `${siteUrl()}/kassa/peruutettu`,
-      automatic_tax: { enabled: false },
     })
 
     return NextResponse.json({ url: session.url })

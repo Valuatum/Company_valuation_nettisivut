@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { InlineMd } from '@/components/InlineMd'
+import { safeJsonLd } from '@/lib/jsonld'
 
 export type ContentSection = {
   heading: string
@@ -49,7 +50,7 @@ export function ContentPage({ page }: { page: ContentPageData }) {
     <article className="mx-auto max-w-3xl px-6 py-20 lg:px-0">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(contentPageJsonLd(page)) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(contentPageJsonLd(page)) }}
       />
       <h1 className="text-balance text-4xl font-light tracking-[-0.02em] text-charcoal lg:text-5xl">
         {page.h1}

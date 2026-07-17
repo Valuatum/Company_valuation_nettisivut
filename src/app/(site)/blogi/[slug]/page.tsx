@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { blogPosts } from '@/content/blog'
 import { InlineMd } from '@/components/InlineMd'
+import { safeJsonLd } from '@/lib/jsonld'
 
 type Params = { params: Promise<{ slug: string }> }
 
@@ -41,7 +42,7 @@ export default async function BlogPostPage({ params }: Params) {
 
   return (
     <article className="mx-auto max-w-3xl px-6 py-20 lg:px-0">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <Link href="/blogi" className="text-sm text-green-deep transition-colors hover:text-green">
         ← Blogi
       </Link>
