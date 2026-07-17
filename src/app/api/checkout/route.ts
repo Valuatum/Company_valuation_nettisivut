@@ -67,25 +67,28 @@ export async function POST(req: Request) {
   }
 
   // --- Real Stripe Checkout Session ------------------------------------------
+  // Stripe Tax is gated behind STRIPE_TAX_ENABLED: with automatic_tax on but Tax
+  // NOT set up in the dashboard, Stripe hard-errors EVERY checkout. So VAT stays
+  // off until the dashboard setup (origin address + Finland registration) is
+  // done, then flip STRIPE_TAX_ENABLED=1 — no code deploy needed. The advertised
+  // prices are "+ alv" (VAT-exclusive), so when on, Tax adds Finnish VAT on top.
+  const taxEnabled = process.env.STRIPE_TAX_ENABLED === '1'
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
       customer_email: customerEmail || undefined,
-      // The advertised prices are "+ alv" (VAT-exclusive), so Stripe Tax adds
-      // Finnish VAT (25.5%) on top and handles EU B2B reverse charge. Requires
-      // Stripe Tax to be registered/enabled in the dashboard, and a billing
-      // address to compute the rate — hence the address collection below.
-      billing_address_collection: 'required',
-      automatic_tax: { enabled: true },
+      ...(taxEnabled
+        ? { billing_address_collection: 'required' as const, automatic_tax: { enabled: true } }
+        : {}),
       line_items: [
         {
           quantity: 1,
           price_data: {
             currency: 'eur',
             unit_amount: q.total,
-            // Amount is pre-tax; Stripe Tax adds VAT on top of it.
-            tax_behavior: 'exclusive',
+            // Pre-tax amount; Stripe Tax adds VAT on top when enabled.
+            ...(taxEnabled ? { tax_behavior: 'exclusive' as const } : {}),
             product_data: {
               name:
                 kind === 'import'
