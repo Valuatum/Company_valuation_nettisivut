@@ -110,11 +110,14 @@ export async function getRun(key: string, rid: string): Promise<any> {
   return r.json()
 }
 
+export type ForecastEdit = { varname: 'ns' | 'ebit'; year: number; value: number }
+
 type Round2Body = {
   clarifications: { id: string; question: string; answer: string }[]
   clarifications_free_text: string
   show_old_numbers?: boolean
   scenario_probabilities?: { pessimistic: number; base: number; optimistic: number }
+  forecast_edits?: ForecastEdit[]
 }
 
 // Thrown by round2() when the free-round cap (429) is hit, so the UI can

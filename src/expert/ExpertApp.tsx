@@ -5,6 +5,7 @@ import {
   type ClarificationRequest,
   type CompanyCandidate,
   type ExpertMe,
+  type ForecastEdit,
   Round2CapReachedError,
   generate,
   getRun,
@@ -19,6 +20,52 @@ import {
 
 const KEY_STORAGE = 'valu_expert_key'
 const TERMINAL = ['ok', 'validation_failed', 'error']
+
+// Prefill data for the "Muuta ennusteita" table, pulled from the run's stage-0
+// FAKTAT (forecast block, tEUR). `actual*` is the last realized year, shown
+// read-only as a comparison column.
+type ForecastData = {
+  years: number[]
+  rev: number[]
+  ebit: number[]
+  actualYear: number | null
+  actualRev: number | null
+  actualEbit: number | null
+}
+
+// Loosely-typed view of a stage-0 FAKTAT object (parsed JSON — fields validated
+// at runtime below, so the shape is optional/unknown rather than `any`).
+type Stage0 = {
+  forecast?: { years?: unknown; net_sales?: unknown; ebit?: unknown }
+  actuals?: {
+    years?: unknown
+    income_statement?: { net_sales?: unknown; ebit?: unknown }
+  }
+}
+
+// Pull the forecast prefill out of a stage-0 FAKTAT object. Returns null when the
+// forecast block is missing/empty so the editor simply isn't offered.
+function extractForecastData(stage0: Stage0 | null | undefined): ForecastData | null {
+  const fc = stage0?.forecast
+  const years = fc?.years
+  if (!Array.isArray(years) || years.length === 0) return null
+  const rev = Array.isArray(fc?.net_sales) ? fc.net_sales : []
+  const ebit = Array.isArray(fc?.ebit) ? fc.ebit : []
+  if (!rev.some((v: unknown) => typeof v === 'number')) return null
+  const aYears = stage0?.actuals?.years
+  const income = stage0?.actuals?.income_statement
+  const lastIdx = Array.isArray(aYears) ? aYears.length - 1 : -1
+  const pick = (arr: unknown, i: number) =>
+    Array.isArray(arr) && typeof arr[i] === 'number' ? arr[i] : null
+  return {
+    years,
+    rev,
+    ebit,
+    actualYear: lastIdx >= 0 ? pick(aYears, lastIdx) : null,
+    actualRev: lastIdx >= 0 ? pick(income?.net_sales, lastIdx) : null,
+    actualEbit: lastIdx >= 0 ? pick(income?.ebit, lastIdx) : null,
+  }
+}
 
 export function ExpertApp() {
   const [key, setKey] = useState('')
@@ -44,6 +91,7 @@ export function ExpertApp() {
     freeText: string
     showOldNumbers: boolean
     scenarioProbabilities?: { pessimistic: number; base: number; optimistic: number }
+    forecastEdits: ForecastEdit[]
   } | null>(null)
   const [buying, setBuying] = useState(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -280,7 +328,8 @@ export function ExpertApp() {
     answers: { id: string; question: string; answer: string }[],
     freeText: string,
     showOldNumbers: boolean,
-    scenarioProbabilities?: { pessimistic: number; base: number; optimistic: number }
+    scenarioProbabilities: { pessimistic: number; base: number; optimistic: number } | undefined,
+    forecastEdits: ForecastEdit[]
   ) {
     if (!runId) return
     setBusy(true)
@@ -292,6 +341,7 @@ export function ExpertApp() {
         clarifications_free_text: freeText,
         show_old_numbers: showOldNumbers,
         scenario_probabilities: scenarioProbabilities,
+        ...(forecastEdits.length ? { forecast_edits: forecastEdits } : {}),
       })
       setReportSrc(null)
       setRunId(run_id)
@@ -299,7 +349,7 @@ export function ExpertApp() {
     } catch (e: any) {
       setBusy(false)
       if (e instanceof Round2CapReachedError) {
-        setCapReachedPayload({ answers, freeText, showOldNumbers, scenarioProbabilities })
+        setCapReachedPayload({ answers, freeText, showOldNumbers, scenarioProbabilities, forecastEdits })
       } else {
         setError(e?.message || String(e))
       }
@@ -316,6 +366,9 @@ export function ExpertApp() {
         clarifications_free_text: capReachedPayload.freeText,
         show_old_numbers: capReachedPayload.showOldNumbers,
         scenario_probabilities: capReachedPayload.scenarioProbabilities,
+        ...(capReachedPayload.forecastEdits.length
+          ? { forecast_edits: capReachedPayload.forecastEdits }
+          : {}),
       })
       window.location.href = checkout_url
     } catch (e: any) {
@@ -341,6 +394,10 @@ export function ExpertApp() {
       ? results.find((r) => r.order === 1).parsed_json.clarification_requests
       : []) || []
   const isRefinedVersion = Boolean(run?.parent_run_id)
+  // Prefill for the forecast editor: the run's stage-0 FAKTAT forecast block.
+  const forecastData: ForecastData | null = !busy
+    ? extractForecastData(results.find((r) => r.order === 0)?.parsed_json)
+    : null
 
   // ── gate ──────────────────────────────────────────────────────────────
   if (!me) {
@@ -525,14 +582,19 @@ export function ExpertApp() {
               </div>
             </div>
           ) : (
-            clarifications.length > 0 && (
+            (clarifications.length > 0 || forecastData) && (
               <div className="mb-6">
                 <h3 className="text-sm font-semibold text-neutral-900">Haluatko tarkentaa raporttia?</h3>
                 <p className="mt-0.5 text-xs text-neutral-500">
                   Lue raportti alla ensin — vastaa alle mihin haluat, tai kirjoita vapaasti mitä
                   tekoäly ei osannut kysyä.
                 </p>
-                <ClarifyPanel busy={busy} requests={clarifications} onSubmit={startRound2} />
+                <ClarifyPanel
+                  busy={busy}
+                  requests={clarifications}
+                  forecastData={forecastData}
+                  onSubmit={startRound2}
+                />
               </div>
             )
           )}
@@ -625,20 +687,24 @@ function Progress({ results }: { results: any[] }) {
 function ClarifyPanel({
   requests,
   busy,
+  forecastData,
   onSubmit,
 }: {
   requests: ClarificationRequest[]
   busy: boolean
+  forecastData: ForecastData | null
   onSubmit: (
     answers: { id: string; question: string; answer: string }[],
     freeText: string,
     showOldNumbers: boolean,
-    scenarioProbabilities?: { pessimistic: number; base: number; optimistic: number }
+    scenarioProbabilities: { pessimistic: number; base: number; optimistic: number } | undefined,
+    forecastEdits: ForecastEdit[]
   ) => void
 }) {
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [freeText, setFreeText] = useState('')
   const [showOldNumbers, setShowOldNumbers] = useState(false)
+  const [forecastEdits, setForecastEdits] = useState<ForecastEdit[]>([])
   const [probs, setProbs] = useState({ pessimistic: '', base: '', optimistic: '' })
   const probsFilled = [probs.pessimistic, probs.base, probs.optimistic].filter(
     (v) => v.trim() !== ''
@@ -723,6 +789,9 @@ function ClarifyPanel({
         placeholder="Muuta täydennettävää…"
         className="mt-2 w-full rounded border border-neutral-300 px-2 py-1 text-xs"
       />
+      {forecastData && (
+        <ForecastEditor data={forecastData} busy={busy} onEditsChange={setForecastEdits} />
+      )}
       <label className="mt-2 flex items-center gap-1.5 text-xs text-neutral-600 cursor-pointer select-none">
         <input
           type="checkbox"
@@ -733,28 +802,294 @@ function ClarifyPanel({
         />
         Näytä vanhat luvut (vanha → uusi)
       </label>
-      <button
-        onClick={() =>
-          onSubmit(
-            requests
-              .map((r) => ({ id: r.id, question: r.question, answer: (answers[r.id] || '').trim() }))
-              .filter((a) => a.answer),
-            freeText.trim(),
-            showOldNumbers,
-            probsValid
-              ? {
-                  pessimistic: parseInt(probs.pessimistic),
-                  base: parseInt(probs.base),
-                  optimistic: parseInt(probs.optimistic),
-                }
-              : undefined
-          )
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <button
+          onClick={() =>
+            onSubmit(
+              requests
+                .map((r) => ({ id: r.id, question: r.question, answer: (answers[r.id] || '').trim() }))
+                .filter((a) => a.answer),
+              freeText.trim(),
+              showOldNumbers,
+              probsValid
+                ? {
+                    pessimistic: parseInt(probs.pessimistic),
+                    base: parseInt(probs.base),
+                    optimistic: parseInt(probs.optimistic),
+                  }
+                : undefined,
+              forecastEdits
+            )
+          }
+          disabled={busy || (answered === 0 && forecastEdits.length === 0) || probsError}
+          className="rounded bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-500 disabled:opacity-40"
+        >
+          Tarkenna raporttia (kierros 2)
+        </button>
+        {forecastEdits.length > 0 && (
+          <span className="text-[11px] text-amber-700">
+            Ennusteita muutettu — malli ja raportti lasketaan uudelleen (kesto tyypillisesti 10–20 min).
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+type Unit = 'abs' | 'pct'
+const _fmt0 = new Intl.NumberFormat('fi-FI', { maximumFractionDigits: 0 })
+const _fmt1 = new Intl.NumberFormat('fi-FI', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+
+function _parseNum(s: string): number | null {
+  const cleaned = s.replace(/[\s ]/g, '').replace(',', '.')
+  if (cleaned === '') return null
+  const v = parseFloat(cleaned)
+  return Number.isFinite(v) ? v : null
+}
+
+// tEUR → millions (the import API unit), rounded to kill float noise.
+function _toMillions(teur: number): number {
+  return Math.round((teur / 1000) * 1e6) / 1e6
+}
+
+const _FC_ROWS = [
+  { key: 'rev' as const, varname: 'ns' as const, name: 'Liikevaihto', pctLabel: 'kasvu-%' },
+  { key: 'ebit' as const, varname: 'ebit' as const, name: 'EBIT', pctLabel: 'EBIT-%' },
+]
+
+// Collapsible revenue/EBIT forecast table. Edits are absolute tEUR in local
+// state; per-row a tEUR ↔ % toggle converts in the browser (revenue = YoY
+// growth %, EBIT = % of revenue). Changed cells are reported up as ForecastEdits
+// (only cells that differ from the prefill, converted to millions).
+function ForecastEditor({
+  data,
+  busy,
+  onEditsChange,
+}: {
+  data: ForecastData
+  busy: boolean
+  onEditsChange: (edits: ForecastEdit[]) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [rev, setRev] = useState<number[]>(() => data.years.map((_, i) => data.rev[i]))
+  const [ebit, setEbit] = useState<number[]>(() => data.years.map((_, i) => data.ebit[i]))
+  const [mode, setMode] = useState<{ rev: Unit; ebit: Unit }>({ rev: 'abs', ebit: 'abs' })
+
+  const cur = { rev, ebit }
+  const set = { rev: setRev, ebit: setEbit }
+
+  const revPct = (arr: number[], i: number) => {
+    const prev = i === 0 ? data.actualRev : arr[i - 1]
+    if (!prev || !Number.isFinite(arr[i])) return NaN
+    return (arr[i] / prev - 1) * 100
+  }
+  const ebitPct = (revArr: number[], ebitArr: number[], i: number) => {
+    if (!revArr[i] || !Number.isFinite(ebitArr[i])) return NaN
+    return (ebitArr[i] / revArr[i]) * 100
+  }
+  const changed = (key: 'rev' | 'ebit', i: number) =>
+    Number.isFinite(cur[key][i]) && Math.abs(cur[key][i] - data[key][i]) > 0.5
+
+  // Report changed cells (in millions) to the parent whenever an edit lands.
+  useEffect(() => {
+    const edits: ForecastEdit[] = []
+    data.years.forEach((y, i) => {
+      _FC_ROWS.forEach((row) => {
+        if (changed(row.key, i)) {
+          edits.push({ varname: row.varname, year: y, value: _toMillions(cur[row.key][i]) })
         }
-        disabled={busy || answered === 0 || probsError}
-        className="mt-2 rounded bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-500 disabled:opacity-40"
+      })
+    })
+    onEditsChange(edits)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rev, ebit, data])
+
+  function commit(key: 'rev' | 'ebit', i: number, raw: string) {
+    const v = _parseNum(raw)
+    if (v === null) return // ignore unparseable; input reverts to state on re-render
+    set[key]((arr) => {
+      const next = arr.slice()
+      if (mode[key] === 'abs') {
+        next[i] = v
+      } else if (key === 'rev') {
+        const prev = i === 0 ? data.actualRev : next[i - 1]
+        if (prev) next[i] = prev * (1 + v / 100)
+      } else {
+        next[i] = rev[i] * (v / 100)
+      }
+      return next
+    })
+  }
+
+  function reset() {
+    setRev(data.years.map((_, i) => data.rev[i]))
+    setEbit(data.years.map((_, i) => data.ebit[i]))
+  }
+
+  const anyChanged = data.years.some((_, i) => changed('rev', i) || changed('ebit', i))
+
+  return (
+    <div className="mt-3">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between rounded-md border border-amber-200 bg-white px-3 py-2 text-left"
       >
-        Tarkenna raporttia (kierros 2)
+        <span>
+          <span className="text-[13px] font-semibold text-amber-900">
+            Muuta ennusteita
+            <span className="ml-2 rounded bg-amber-600 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+              Uusi
+            </span>
+          </span>
+          <span className="mt-0.5 block text-[11px] text-neutral-500">
+            Voit halutessasi muuttaa raportin liikevaihto- ja EBIT-ennusteita — raportti ja
+            arvonmääritys lasketaan uudelleen muutostesi pohjalta.
+          </span>
+        </span>
+        <span className={`text-amber-700 transition-transform ${open ? 'rotate-180' : ''}`}>▼</span>
       </button>
+
+      {open && (
+        <div className="rounded-b-md border border-t-0 border-amber-200 bg-white px-3 pb-3 pt-2">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-xs">
+              <thead>
+                <tr className="text-[11px] text-neutral-500">
+                  <th className="p-1 text-left" />
+                  {data.actualYear != null && (
+                    <th className="p-1 text-right text-neutral-400">
+                      {data.actualYear}
+                      <br />
+                      (tot.)
+                    </th>
+                  )}
+                  {data.years.map((y) => (
+                    <th key={y} className="p-1 text-right">
+                      {y}E
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {_FC_ROWS.map((row) => {
+                  const isAbs = mode[row.key] === 'abs'
+                  const actualVal = row.key === 'rev' ? data.actualRev : data.actualEbit
+                  const actualPct =
+                    row.key === 'ebit' && data.actualRev && actualVal != null
+                      ? (actualVal / data.actualRev) * 100
+                      : null
+                  return (
+                    <tr key={row.key}>
+                      <td className="whitespace-nowrap p-1 text-left align-top">
+                        <span className="text-xs font-semibold text-neutral-800">{row.name}</span>
+                        <span className="mt-1 inline-flex overflow-hidden rounded border border-neutral-300">
+                          {(['abs', 'pct'] as const).map((m) => (
+                            <button
+                              key={m}
+                              type="button"
+                              disabled={busy}
+                              onClick={() => setMode((mm) => ({ ...mm, [row.key]: m }))}
+                              className={`px-1.5 py-0.5 text-[10px] ${
+                                mode[row.key] === m
+                                  ? 'bg-neutral-800 text-white'
+                                  : 'bg-white text-neutral-500'
+                              }`}
+                            >
+                              {m === 'abs' ? 'tEUR' : row.pctLabel}
+                            </button>
+                          ))}
+                        </span>
+                      </td>
+                      {data.actualYear != null && (
+                        <td className="p-1 text-right align-top text-neutral-400">
+                          {actualVal == null
+                            ? '–'
+                            : isAbs
+                              ? _fmt0.format(actualVal)
+                              : row.key === 'rev'
+                                ? '–'
+                                : actualPct != null
+                                  ? `${_fmt1.format(actualPct)} %`
+                                  : '–'}
+                        </td>
+                      )}
+                      {data.years.map((y, i) => {
+                        const pct =
+                          row.key === 'rev' ? revPct(cur.rev, i) : ebitPct(cur.rev, cur.ebit, i)
+                        const shown = isAbs
+                          ? Number.isFinite(cur[row.key][i])
+                            ? _fmt0.format(cur[row.key][i])
+                            : ''
+                          : Number.isFinite(pct)
+                            ? _fmt1.format(pct)
+                            : ''
+                        const deriv = isAbs
+                          ? Number.isFinite(pct)
+                            ? `${_fmt1.format(pct)} %`
+                            : ''
+                          : Number.isFinite(cur[row.key][i])
+                            ? `${_fmt0.format(cur[row.key][i])} tEUR`
+                            : ''
+                        const isChanged = changed(row.key, i)
+                        return (
+                          <td key={y} className="p-1 text-right align-top">
+                            <input
+                              defaultValue={shown}
+                              key={`${row.key}-${i}-${mode[row.key]}-${shown}`}
+                              disabled={busy}
+                              onBlur={(e) => commit(row.key, i, e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+                              }}
+                              className={`w-[4.6rem] rounded border px-1.5 py-1 text-right text-xs ${
+                                isChanged
+                                  ? 'border-amber-600 bg-amber-100 font-semibold'
+                                  : 'border-neutral-300'
+                              }`}
+                            />
+                            {deriv && (
+                              <span className="mt-0.5 block text-[10px] text-neutral-400">{deriv}</span>
+                            )}
+                            {isChanged && (
+                              <span className="mt-0.5 block text-[10px] text-amber-700">
+                                alkup.{' '}
+                                {isAbs
+                                  ? _fmt0.format(data[row.key][i])
+                                  : `${_fmt1.format(
+                                      row.key === 'rev'
+                                        ? revPct(data.rev, i)
+                                        : ebitPct(data.rev, data.ebit, i)
+                                    )} %`}
+                              </span>
+                            )}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-2 flex items-center justify-between">
+            <span className="text-[11px] text-neutral-500">
+              Luvut tuhansina euroina (tEUR). Prosenttinäkymässä liikevaihto = kasvu-%
+              edellisvuodesta, EBIT = osuus liikevaihdosta.
+            </span>
+            {anyChanged && (
+              <button
+                type="button"
+                onClick={reset}
+                disabled={busy}
+                className="text-[11px] text-amber-700 underline"
+              >
+                Palauta alkuperäiset
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
