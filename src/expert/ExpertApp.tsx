@@ -6,7 +6,9 @@ import {
   type CompanyCandidate,
   type ExpertMe,
   type ForecastEdit,
+  type ForecastPreview,
   Round2CapReachedError,
+  forecastPreview,
   generate,
   getRun,
   reportHtml,
@@ -593,6 +595,7 @@ export function ExpertApp() {
                   busy={busy}
                   requests={clarifications}
                   forecastData={forecastData}
+                  onForecastPreview={(text) => forecastPreview(key, runId!, text)}
                   onSubmit={startRound2}
                 />
               </div>
@@ -688,11 +691,13 @@ function ClarifyPanel({
   requests,
   busy,
   forecastData,
+  onForecastPreview,
   onSubmit,
 }: {
   requests: ClarificationRequest[]
   busy: boolean
   forecastData: ForecastData | null
+  onForecastPreview: (text: string) => Promise<ForecastPreview>
   onSubmit: (
     answers: { id: string; question: string; answer: string }[],
     freeText: string,
@@ -790,7 +795,12 @@ function ClarifyPanel({
         className="mt-2 w-full rounded border border-neutral-300 px-2 py-1 text-xs"
       />
       {forecastData && (
-        <ForecastEditor data={forecastData} busy={busy} onEditsChange={setForecastEdits} />
+        <ForecastEditor
+          data={forecastData}
+          busy={busy}
+          onPreview={onForecastPreview}
+          onEditsChange={setForecastEdits}
+        />
       )}
       <label className="mt-2 flex items-center gap-1.5 text-xs text-neutral-600 cursor-pointer select-none">
         <input
@@ -864,16 +874,23 @@ const _FC_ROWS = [
 function ForecastEditor({
   data,
   busy,
+  onPreview,
   onEditsChange,
 }: {
   data: ForecastData
   busy: boolean
+  onPreview: (text: string) => Promise<ForecastPreview>
   onEditsChange: (edits: ForecastEdit[]) => void
 }) {
   const [open, setOpen] = useState(false)
   const [rev, setRev] = useState<number[]>(() => data.years.map((_, i) => data.rev[i]))
   const [ebit, setEbit] = useState<number[]>(() => data.years.map((_, i) => data.ebit[i]))
   const [mode, setMode] = useState<{ rev: Unit; ebit: Unit }>({ rev: 'abs', ebit: 'abs' })
+  const [description, setDescription] = useState('')
+  const [aiPreview, setAiPreview] = useState<ForecastPreview | null>(null)
+  const [aiBusy, setAiBusy] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+  const [acceptedSummary, setAcceptedSummary] = useState<string | null>(null)
 
   const cur = { rev, ebit }
   const set = { rev: setRev, ebit: setEbit }
@@ -924,6 +941,37 @@ function ForecastEditor({
   function reset() {
     setRev(data.years.map((_, i) => data.rev[i]))
     setEbit(data.years.map((_, i) => data.ebit[i]))
+    setAcceptedSummary(null)
+  }
+
+  async function createAiPreview() {
+    const text = description.trim()
+    if (!text) return
+    setAiBusy(true)
+    setAiError(null)
+    setAiPreview(null)
+    try {
+      setAiPreview(await onPreview(text))
+    } catch (e: unknown) {
+      setAiError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setAiBusy(false)
+    }
+  }
+
+  function acceptAiPreview() {
+    if (!aiPreview || aiPreview.edits.length === 0) return
+    const byCell = new Map(
+      aiPreview.rows.map((row) => [`${row.varname}:${row.year}`, row.value] as const),
+    )
+    setRev((current) =>
+      data.years.map((year, i) => byCell.get(`ns:${year}`) ?? current[i]),
+    )
+    setEbit((current) =>
+      data.years.map((year, i) => byCell.get(`ebit:${year}`) ?? current[i]),
+    )
+    setAcceptedSummary(aiPreview.summary || 'AI:n ehdottamat ennustemuutokset')
+    setAiPreview(null)
   }
 
   const anyChanged = data.years.some((_, i) => changed('rev', i) || changed('ebit', i))
@@ -952,6 +1000,141 @@ function ForecastEditor({
 
       {open && (
         <div className="rounded-b-md border border-t-0 border-amber-200 bg-white px-3 pb-3 pt-2">
+          <div className="mb-3 rounded-md border border-amber-200 bg-amber-50 p-3">
+            <div className="text-xs font-semibold text-amber-900">
+              Kuvaile, miten ennustetta pitäisi muuttaa
+            </div>
+            <p className="mt-0.5 text-[11px] text-amber-700">
+              AI muodostaa kuvauksesta numeroehdotuksen. Näet ja hyväksyt luvut ennen
+              raportin uudelleenlaskentaa.
+            </p>
+            <textarea
+              value={description}
+              onChange={(e) => {
+                setDescription(e.target.value)
+                setAiError(null)
+              }}
+              disabled={busy || aiBusy}
+              rows={3}
+              maxLength={8000}
+              placeholder="Esim. Liikevaihto kasvaa noin 20 % vuodessa uuden tuotelinjan ansiosta, ja EBIT-marginaali paranee 12 %:iin vuoteen 2028 mennessä."
+              className="mt-2 w-full rounded border border-neutral-300 bg-white px-2.5 py-2 text-xs"
+            />
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {[
+                ['Nopeampi kasvu + parempi marginaali', 'Liikevaihto kasvaa noin 20 % vuodessa uuden tuotelinjan ansiosta, ja EBIT-marginaali paranee 12 %:iin ennustejakson loppuun mennessä.'],
+                ['Maltillisempi kasvu', 'Kasvu hidastuu noin 5 %:iin vuodessa markkinan kypsyessä. Kannattavuus säilyy nykytasolla.'],
+              ].map(([label, text]) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => setDescription(text)}
+                  disabled={busy || aiBusy}
+                  className="rounded-full border border-amber-200 bg-white px-2.5 py-1 text-[10px] text-amber-800 hover:bg-amber-100 disabled:opacity-40"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void createAiPreview()}
+                disabled={busy || aiBusy || !description.trim()}
+                className="rounded border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:opacity-40"
+              >
+                {aiBusy ? 'AI muodostaa muutoksia…' : 'Muodosta muutokset (AI)'}
+              </button>
+              <span className="text-[10px] text-neutral-500">
+                AI-palvelulle lähetetään kuvaus sekä taulukon liikevaihto- ja EBIT-ennusteet.
+              </span>
+            </div>
+            {aiError && <p className="mt-2 text-[11px] text-red-600">{aiError}</p>}
+
+            {aiPreview && (
+              <div className="mt-3 overflow-hidden rounded-md border border-amber-300 bg-white">
+                <div className="bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-900">
+                  AI:n ehdotus — tarkista ennen käyttöönottoa
+                </div>
+                <div className="p-3">
+                  {aiPreview.summary && (
+                    <p className="border-l-2 border-amber-400 bg-neutral-50 px-2.5 py-2 text-xs text-neutral-700">
+                      {aiPreview.summary}
+                    </p>
+                  )}
+                  {aiPreview.rows.length > 0 ? (
+                    <div className="mt-2 overflow-x-auto">
+                      <table className="w-full border-collapse text-xs">
+                        <thead>
+                          <tr className="border-b border-neutral-200 text-left text-[10px] text-neutral-500">
+                            <th className="py-1 pr-2">Muuttuja</th>
+                            <th className="px-2 py-1 text-right">Vuosi</th>
+                            <th className="px-2 py-1 text-right">Nykyinen</th>
+                            <th className="py-1 pl-2 text-right">Ehdotus</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {aiPreview.rows.map((row) => (
+                            <tr key={`${row.varname}-${row.year}`} className="border-b border-neutral-100 last:border-0">
+                              <td className="py-1.5 pr-2 font-medium text-neutral-700">
+                                {row.varname === 'ns' ? 'Liikevaihto' : 'EBIT'}
+                              </td>
+                              <td className="px-2 py-1.5 text-right">{row.year}</td>
+                              <td className="px-2 py-1.5 text-right text-neutral-400">
+                                {_fmt0.format(row.old)} tEUR
+                              </td>
+                              <td className="py-1.5 pl-2 text-right font-semibold text-neutral-900">
+                                {_fmt0.format(row.value)} tEUR
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-xs text-neutral-600">
+                      AI ei ehdottanut muutoksia nykyisiin ennustelukuihin.
+                    </p>
+                  )}
+                  {aiPreview.notes.length > 0 && (
+                    <ul className="mt-2 list-disc pl-4 text-[11px] text-amber-800">
+                      {aiPreview.notes.map((note) => <li key={note}>{note}</li>)}
+                    </ul>
+                  )}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={acceptAiPreview}
+                      disabled={busy || aiPreview.edits.length === 0}
+                      className="rounded bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-500 disabled:opacity-40"
+                    >
+                      Käytä nämä muutokset
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAiPreview(null)}
+                      disabled={busy}
+                      className="rounded border border-neutral-300 px-3 py-1.5 text-xs text-neutral-600 hover:bg-neutral-50"
+                    >
+                      Muokkaa kuvausta
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {acceptedSummary && (
+              <div className="mt-3 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2">
+                <div className="text-xs font-semibold text-emerald-800">
+                  Ennustemuutokset otettu käyttöön
+                </div>
+                <p className="mt-0.5 text-[11px] text-emerald-700">{acceptedSummary}</p>
+                <p className="mt-1 text-[10px] text-emerald-700">
+                  Voit vielä hienosäätää hyväksyttyjä arvoja alla olevasta taulukosta.
+                </p>
+              </div>
+            )}
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-xs">
               <thead>
