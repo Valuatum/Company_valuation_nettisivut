@@ -1046,7 +1046,8 @@ function ForecastEditor({
                 {aiBusy ? 'AI muodostaa muutoksia…' : 'Muodosta muutokset (AI)'}
               </button>
               <span className="text-[10px] text-neutral-500">
-                AI-palvelulle lähetetään kuvaus sekä taulukon liikevaihto- ja EBIT-ennusteet.
+                Kuvaus sekä nykyiset liikevaihto- ja EBIT-ennusteet käsitellään ulkoisessa
+                AI-palvelussa (Google Gemini). Yrityksen nimeä, tunnusta tai sähköpostia ei lähetetä.
               </span>
             </div>
             {aiError && <p className="mt-2 text-[11px] text-red-600">{aiError}</p>}
