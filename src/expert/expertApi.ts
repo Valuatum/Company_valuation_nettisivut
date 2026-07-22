@@ -93,12 +93,34 @@ export async function generate(
     industry_tree?: unknown | null
     delivery_email?: string | null
     user_input?: string
+    // "forecast" stops the run after the data-fetch stage so the user can
+    // review/edit revenue+EBIT before the report is written; "generate" (default)
+    // runs straight through.
+    mode?: 'generate' | 'forecast'
   }
-): Promise<{ run_id: string }> {
+): Promise<{ run_id: string; mode?: string }> {
   const r = await fetch(`${API}/api/expert/generate`, {
     method: 'POST',
     headers: jsonAuth(key),
     body: JSON.stringify(body),
+  })
+  if (!r.ok) throw await apiError(r)
+  return r.json()
+}
+
+// Continue an `awaiting_forecast` round-1 run. With edits the backend first
+// imports them into a new ValuBuild model (holds the request through the import,
+// typically ~100 s) before writing the report; without edits it just proceeds
+// on Valuatum's own forecasts.
+export async function generateForecast(
+  key: string,
+  rid: string,
+  edits: ForecastEdit[],
+): Promise<{ run_id: string; forecast_edited: boolean }> {
+  const r = await fetch(`${API}/api/runs/${rid}/generate-forecast`, {
+    method: 'POST',
+    headers: jsonAuth(key),
+    body: JSON.stringify(edits.length ? { forecast_edits: edits } : {}),
   })
   if (!r.ok) throw await apiError(r)
   return r.json()

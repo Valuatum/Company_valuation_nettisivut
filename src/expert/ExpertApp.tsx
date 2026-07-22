@@ -10,6 +10,7 @@ import {
   Round2CapReachedError,
   forecastPreview,
   generate,
+  generateForecast,
   getRun,
   reportHtml,
   reportPdf,
@@ -80,6 +81,14 @@ export function ExpertApp() {
   const [searchErr, setSearchErr] = useState<string | null>(null)
   const [deliveryEmail, setDeliveryEmail] = useState('')
   const [userInput, setUserInput] = useState('')
+  // Opt-in (default off): stop after data fetch so the user can review/edit the
+  // revenue+EBIT forecasts before the report is written (round-1 forecast flow).
+  const [wantForecast, setWantForecast] = useState(false)
+  // Forecast edits the user made on the round-1 awaiting_forecast screen (millions).
+  const [round1Edits, setRound1Edits] = useState<ForecastEdit[]>([])
+  // True while the generate-forecast request holds through the ValuBuild import
+  // (~100 s); drives the "importing forecasts" progress label.
+  const [importingForecast, setImportingForecast] = useState(false)
 
   const [runId, setRunId] = useState<string | null>(null)
   const [run, setRun] = useState<any>(null)
@@ -140,7 +149,10 @@ export function ExpertApp() {
       const r = await getRun(k, rid)
       setRunId(rid)
       setRun(r)
-      if (r.status === 'running') {
+      if (r.status === 'awaiting_forecast') {
+        // Parked mid round-1 forecast review — show the editor, not a report.
+        setBusy(false)
+      } else if (r.status === 'running' || r.status === 'importing_forecast') {
         setBusy(true)
         poll(rid, k)
       } else {
@@ -208,6 +220,8 @@ export function ExpertApp() {
     setSearchErr(null)
     setDeliveryEmail('')
     setUserInput('')
+    setWantForecast(false)
+    setRound1Edits([])
   }
 
   async function doSearch() {
@@ -275,13 +289,22 @@ export function ExpertApp() {
   }
 
   // Poll a run until it settles. k defaults to the signed-in key; see finishRun.
+  // `running` and `importing_forecast` keep polling; `awaiting_forecast` stops
+  // and drops into the round-1 forecast-review screen (not a report, not an
+  // error); everything else is terminal → fetch the report.
   function poll(rid: string, k: string = key) {
     if (pollRef.current) clearInterval(pollRef.current)
     pollRef.current = setInterval(async () => {
       try {
         const r = await getRun(k, rid)
         setRun(r)
-        if (r.status !== 'running') void finishRun(r, k)
+        if (r.status === 'awaiting_forecast') {
+          if (pollRef.current) clearInterval(pollRef.current)
+          pollRef.current = null
+          setBusy(false)
+        } else if (r.status !== 'running' && r.status !== 'importing_forecast') {
+          void finishRun(r, k)
+        }
       } catch {
         /* transient */
       }
@@ -304,6 +327,7 @@ export function ExpertApp() {
         industry_tree: company.industry_tree,
         delivery_email: deliveryEmail.trim() || undefined,
         user_input: userInput.trim() || undefined,
+        mode: wantForecast ? 'forecast' : 'generate',
       })
       setRunId(run_id)
       setMe(await validateKey(key)) // refresh remaining quota
@@ -311,6 +335,26 @@ export function ExpertApp() {
     } catch (e: any) {
       setBusy(false)
       setError(e?.message || String(e))
+    }
+  }
+
+  // Continue a round-1 run parked in awaiting_forecast. With edits the request
+  // holds through the ValuBuild import (~100 s) before the report starts.
+  async function continueFromForecast(edits: ForecastEdit[]) {
+    if (!runId) return
+    setBusy(true)
+    setError(null)
+    setImportingForecast(edits.length > 0)
+    try {
+      await generateForecast(key, runId, edits)
+      poll(runId)
+    } catch (e: any) {
+      // Import failed → backend reset the run to awaiting_forecast; keep the
+      // editor on screen so the user can retry or continue unchanged.
+      setBusy(false)
+      setError(e?.message || String(e))
+    } finally {
+      setImportingForecast(false)
     }
   }
 
@@ -324,6 +368,7 @@ export function ExpertApp() {
     setReportSrc(null)
     setBusy(false)
     setError(null)
+    setRound1Edits([])
   }
 
   async function startRound2(
@@ -532,22 +577,76 @@ export function ExpertApp() {
             className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
           />
 
+          <fieldset className="mt-4 rounded-lg border border-neutral-200 p-3">
+            <legend className="px-1 text-xs font-medium text-neutral-600">
+              Omat ennusteet (valinnainen)
+            </legend>
+            <label className="flex cursor-pointer items-start gap-2 py-1">
+              <input
+                type="radio"
+                name="forecast-mode"
+                checked={!wantForecast}
+                onChange={() => setWantForecast(false)}
+                className="mt-0.5"
+              />
+              <span className="text-sm text-neutral-700">
+                Käytä Valuatumin ennusteita — luo raportti suoraan{' '}
+                <span className="text-neutral-400">(oletus)</span>
+              </span>
+            </label>
+            <label className="flex cursor-pointer items-start gap-2 py-1">
+              <input
+                type="radio"
+                name="forecast-mode"
+                checked={wantForecast}
+                onChange={() => setWantForecast(true)}
+                className="mt-0.5"
+              />
+              <span className="text-sm text-neutral-700">
+                Haluan tarkistaa ennusteet — voin muokata liikevaihto- ja EBIT-ennusteita
+                ennen raportin luontia
+              </span>
+            </label>
+          </fieldset>
+
           <button
             onClick={startGeneration}
             disabled={!selected || (!me.unlimited && (me.remaining ?? 0) <= 0)}
             className="mt-4 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-40"
           >
-            {!me.unlimited && (me.remaining ?? 0) <= 0 ? 'Kiintiö käytetty' : 'Tuota arvonmääritys'}
+            {!me.unlimited && (me.remaining ?? 0) <= 0
+              ? 'Kiintiö käytetty'
+              : wantForecast
+                ? 'Hae tiedot ja tarkista ennusteet'
+                : 'Tuota arvonmääritys'}
           </button>
           <p className="mt-2 text-xs text-neutral-500">
-            Raportin generointi kestää tyypillisesti 10–20 minuuttia. Valmis raportti sisältää
-            tekoälyn tarkentavia kysymyksiä — vastaamalla niihin saat halutessasi tarkennetun
-            version{roundsNote}.
+            {wantForecast
+              ? 'Haemme ensin yrityksen taloustiedot ja näytämme ennusteet — voit muokata niitä tai jatkaa suoraan. Sen jälkeen raportin generointi kestää tyypillisesti 10–20 minuuttia.'
+              : 'Raportin generointi kestää tyypillisesti 10–20 minuuttia.'}{' '}
+            Valmis raportti sisältää tekoälyn tarkentavia kysymyksiä — vastaamalla niihin saat
+            halutessasi tarkennetun version{roundsNote}.
           </p>
         </div>
       )}
 
-      {runId && busy && <Progress results={results} />}
+      {runId && busy && (
+        <Progress
+          results={results}
+          awaitingImport={importingForecast || run?.status === 'importing_forecast'}
+        />
+      )}
+
+      {runId && !busy && run?.status === 'awaiting_forecast' && (
+        <ForecastGate
+          data={forecastData}
+          edits={round1Edits}
+          onEditsChange={setRound1Edits}
+          onPreview={(text) => forecastPreview(key, runId, text)}
+          onContinue={() => continueFromForecast(round1Edits)}
+        />
+      )}
+
       {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
       {reportSrc && (
@@ -663,11 +762,13 @@ function Shell({ children }: { children: React.ReactNode }) {
   )
 }
 
-function Progress({ results }: { results: any[] }) {
+function Progress({ results, awaitingImport = false }: { results: any[]; awaitingImport?: boolean }) {
   const byOrder: Record<number, any> = {}
   for (const r of results) byOrder[r.order] = r
   const running = results.find((r) => r.status === 'running')
-  const label = byOrder[0] && byOrder[0].status === 'running'
+  const label = awaitingImport
+    ? 'Tuodaan muokatut ennusteet Valuatumin malliin…'
+    : byOrder[0] && byOrder[0].status === 'running'
     ? 'Haetaan taloustietoja Valuatumista…'
     : running
     ? `Analysoidaan (vaihe ${running.order})…`
@@ -683,6 +784,64 @@ function Progress({ results }: { results: any[] }) {
         Valmis raportti sisältää tekoälyn tarkentavia kysymyksiä — vastaamalla niihin saat
         halutessasi tarkennetun version.
       </p>
+    </div>
+  )
+}
+
+// Round-1 checkpoint: the run has fetched data and is parked in awaiting_forecast.
+// Show Valuatum's forecasts, let the user optionally edit them, then continue.
+// Doing nothing and pressing the button is a first-class path — the report is
+// simply generated on Valuatum's own numbers.
+function ForecastGate({
+  data,
+  edits,
+  onEditsChange,
+  onPreview,
+  onContinue,
+}: {
+  data: ForecastData | null
+  edits: ForecastEdit[]
+  onEditsChange: (edits: ForecastEdit[]) => void
+  onPreview: (text: string) => Promise<ForecastPreview>
+  onContinue: () => void
+}) {
+  const edited = edits.length > 0
+  return (
+    <div className="mt-6 rounded-lg border border-neutral-200 bg-white p-4">
+      <h2 className="text-sm font-semibold text-neutral-900">Tarkista ennusteet ennen raporttia</h2>
+      <p className="mt-1 text-xs text-neutral-500">
+        Alla ovat Valuatumin ennusteet liikevaihdolle ja EBITille. Voit halutessasi muokata niitä
+        omilla näkemyksilläsi — tai jättää ne ennalleen ja luoda raportin suoraan. Muokkaaminen on
+        vapaaehtoista.
+      </p>
+
+      {data ? (
+        <ForecastEditor
+          data={data}
+          busy={false}
+          defaultOpen
+          onPreview={onPreview}
+          onEditsChange={onEditsChange}
+        />
+      ) : (
+        <p className="mt-3 text-xs text-amber-700">
+          Ennustedataa ei ollut saatavilla — raportti luodaan Valuatumin ennusteilla.
+        </p>
+      )}
+
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button
+          onClick={onContinue}
+          className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500"
+        >
+          {edited ? 'Luo raportti näillä ennusteilla' : 'Luo raportti Valuatumin ennusteilla'}
+        </button>
+        {edited && (
+          <span className="text-xs text-neutral-500">
+            Muokatut ennusteet viedään ensin Valuatumin malliin (n. 1–2 min) ennen raportin luontia.
+          </span>
+        )}
+      </div>
     </div>
   )
 }
@@ -876,13 +1035,15 @@ function ForecastEditor({
   busy,
   onPreview,
   onEditsChange,
+  defaultOpen = false,
 }: {
   data: ForecastData
   busy: boolean
   onPreview: (text: string) => Promise<ForecastPreview>
   onEditsChange: (edits: ForecastEdit[]) => void
+  defaultOpen?: boolean
 }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(defaultOpen)
   const [rev, setRev] = useState<number[]>(() => data.years.map((_, i) => data.rev[i]))
   const [ebit, setEbit] = useState<number[]>(() => data.years.map((_, i) => data.ebit[i]))
   const [mode, setMode] = useState<{ rev: Unit; ebit: Unit }>({ rev: 'abs', ebit: 'abs' })
