@@ -634,6 +634,7 @@ export function ExpertApp() {
         <Progress
           results={results}
           awaitingImport={importingForecast || run?.status === 'importing_forecast'}
+          forecastFetch={Boolean(run?.params?.forecast_mode) && !results.some((r: any) => r.order >= 1)}
         />
       )}
 
@@ -661,7 +662,7 @@ export function ExpertApp() {
               <p className="mt-0.5 text-xs text-amber-700">
                 {me?.paid_rounds_enabled
                   ? 'Vastauksesi on tallessa. Lisätarkennuskierros maksaa 5 € — se käynnistyy heti maksun jälkeen ja saat päivitetyn raportin samaan tapaan kuin edelliset.'
-                  : 'Tämän raportin tarkennuskierrokset on käytetty. Raportti alla on viimeisin versio — voit yhä ladata sen PDF:nä. Jos tarvitset lisää tarkennuksia, ota yhteyttä: excl@valuatum.com'}
+                  : 'Tämän raportin tarkennuskierrokset on käytetty. Raportti alla on viimeisin versio — voit yhä ladata sen PDF:nä. Jos tarvitset lisää tarkennuksia, ota yhteyttä: excel@valuatum.com'}
               </p>
               <div className="mt-3 flex items-center gap-3">
                 {me?.paid_rounds_enabled && (
@@ -753,8 +754,8 @@ function Shell({ children }: { children: React.ReactNode }) {
         {children}
         <p className="mt-10 border-t border-neutral-200 pt-4 text-xs text-neutral-400">
           Jos jokin menee pieleen, ota yhteyttä:{' '}
-          <a href="mailto:excl@valuatum.com" className="text-neutral-600 hover:underline">
-            excl@valuatum.com
+          <a href="mailto:excel@valuatum.com" className="text-neutral-600 hover:underline">
+            excel@valuatum.com
           </a>
         </p>
       </div>
@@ -762,12 +763,24 @@ function Shell({ children }: { children: React.ReactNode }) {
   )
 }
 
-function Progress({ results, awaitingImport = false }: { results: any[]; awaitingImport?: boolean }) {
+function Progress({
+  results,
+  awaitingImport = false,
+  forecastFetch = false,
+}: {
+  results: any[]
+  awaitingImport?: boolean
+  // Forecast-mode data fetch before the review screen (~1 min) — not the
+  // 10-20 min report generation, so the copy must differ.
+  forecastFetch?: boolean
+}) {
   const byOrder: Record<number, any> = {}
   for (const r of results) byOrder[r.order] = r
   const running = results.find((r) => r.status === 'running')
   const label = awaitingImport
     ? 'Tuodaan muokatut ennusteet Valuatumin malliin…'
+    : forecastFetch
+    ? 'Haetaan taloustiedot — pääset kohta tarkistamaan ennusteet…'
     : byOrder[0] && byOrder[0].status === 'running'
     ? 'Haetaan taloustietoja Valuatumista…'
     : running
@@ -778,12 +791,16 @@ function Progress({ results, awaitingImport = false }: { results: any[]; awaitin
       <div className="flex items-center gap-3">
         <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500" />
         <span className="text-sm text-emerald-800">{label}</span>
-        <span className="text-xs text-emerald-600">Kestää tyypillisesti 10–20 minuuttia.</span>
+        <span className="text-xs text-emerald-600">
+          {forecastFetch ? 'Kestää noin minuutin.' : 'Kestää tyypillisesti 10–20 minuuttia.'}
+        </span>
       </div>
-      <p className="mt-1.5 text-xs text-emerald-700">
-        Valmis raportti sisältää tekoälyn tarkentavia kysymyksiä — vastaamalla niihin saat
-        halutessasi tarkennetun version.
-      </p>
+      {!forecastFetch && (
+        <p className="mt-1.5 text-xs text-emerald-700">
+          Valmis raportti sisältää tekoälyn tarkentavia kysymyksiä — vastaamalla niihin saat
+          halutessasi tarkennetun version.
+        </p>
+      )}
     </div>
   )
 }

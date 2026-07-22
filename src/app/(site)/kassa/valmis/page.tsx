@@ -292,8 +292,8 @@ export default async function KassaValmisPage({
                 <p className="mt-1.5 text-[13px] text-steel">
                   Jos raportin generointi ei etene tai jokin näyttää menneen pieleen, ota
                   yhteyttä:{' '}
-                  <a href="mailto:excl@valuatum.com" className="font-medium text-green-deep hover:text-green">
-                    excl@valuatum.com
+                  <a href="mailto:excel@valuatum.com" className="font-medium text-green-deep hover:text-green">
+                    excel@valuatum.com
                   </a>
                 </p>
               )}
