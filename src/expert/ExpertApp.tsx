@@ -1068,16 +1068,28 @@ function ForecastEditor({
   const changed = (key: 'rev' | 'ebit', i: number) =>
     Number.isFinite(cur[key][i]) && Math.abs(cur[key][i] - data[key][i]) > 0.5
 
-  // Report changed cells (in millions) to the parent whenever an edit lands.
+  // Report edits (in millions) to the parent whenever a cell changes.
+  //
+  // ValuBuild's forecast import applies values year-by-year and STOPS at the first
+  // year with no value, so sending only the changed cells (e.g. 2027-2029) drops
+  // them when an earlier year (2025/2026) has none — verified end-to-end. So we
+  // send a CONTIGUOUS block from the first forecast year through the last changed
+  // year, filling untouched years with their current (baseline) value.
+  // ponytail: workaround for ValuBuild dropping sparse years; drop back to
+  // changed-only once ValuBuild sets values directly (PSD2-style, see handoff).
   useEffect(() => {
+    let lastChanged = -1
+    data.years.forEach((_, i) => {
+      if (changed('rev', i) || changed('ebit', i)) lastChanged = i
+    })
     const edits: ForecastEdit[] = []
-    data.years.forEach((y, i) => {
+    for (let i = 0; i <= lastChanged; i++) {
       _FC_ROWS.forEach((row) => {
-        if (changed(row.key, i)) {
-          edits.push({ varname: row.varname, year: y, value: _toMillions(cur[row.key][i]) })
+        if (Number.isFinite(cur[row.key][i])) {
+          edits.push({ varname: row.varname, year: data.years[i], value: _toMillions(cur[row.key][i]) })
         }
       })
-    })
+    }
     onEditsChange(edits)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rev, ebit, data])
