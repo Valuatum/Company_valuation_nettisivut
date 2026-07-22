@@ -11,6 +11,7 @@ interface CheckoutBody {
   shareData?: boolean
   customerEmail?: string
   userInput?: string
+  wantForecast?: boolean
 }
 
 export async function POST(req: Request) {
@@ -33,6 +34,10 @@ export async function POST(req: Request) {
   const businessId = body.businessId?.slice(0, 30) || ''
   const customerEmail = body.customerEmail?.slice(0, 200) || ''
   const userInput = body.userInput?.slice(0, 4000) || ''
+  // Opt-in: stop after the data fetch so the buyer can review/edit forecasts
+  // before the report is written. Only meaningful for 'existing' (auto-generation);
+  // import/creditsafe still go through the operator, so ignore it there.
+  const wantForecast = kind === 'existing' && Boolean(body.wantForecast)
   const q = quote(kind, shareData)
 
   // Where the user lands after a successful payment.
@@ -59,6 +64,7 @@ export async function POST(req: Request) {
     if (customerEmail) params.set('email', customerEmail)
     if (userInput) params.set('userInput', userInput)
     if (shareData) params.set('share', '1')
+    if (wantForecast) params.set('forecast', '1')
     const demoTarget =
       kind === 'import'
         ? `/tilinpaatokset/lataa?${params}`
@@ -110,6 +116,7 @@ export async function POST(req: Request) {
         businessId,
         customerEmail,
         shareData: String(shareData),
+        forecast: String(wantForecast),
         // Stripe metadata values cap at 500 chars — the model/DB allow up to
         // 4000, but that's for the immediate checkout-generate call below,
         // not for round-tripping through Stripe.

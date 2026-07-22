@@ -76,6 +76,9 @@ async function fulfilSession(session: Stripe.Checkout.Session) {
   if (kind === 'existing' && businessId) {
     const result = await postCheckoutGenerate({
       businessId, companyName, email, userInput, stripeSessionId: sessionId,
+      // Must match the success page: the buyer opted in to reviewing forecasts,
+      // so start the run in forecast mode whichever path (webhook/page) fires first.
+      forecast: m.forecast === 'true',
     })
     if (result) return // run started (or reused) — done
     console.error('stripe webhook: checkout-generate returned null, queuing order', sessionId)

@@ -51,6 +51,9 @@ type OrderResult = {
   outcome: Outcome
   // Set only when outcome === 'generating'.
   reportLink: string | null
+  // Buyer opted in to reviewing forecasts before the report: the run stops at
+  // the forecast step and does NOT auto-deliver — they must open the link.
+  awaitingForecast: boolean
 }
 
 // kind==='existing' means we already hold the company's financials, so
@@ -59,10 +62,11 @@ type OrderResult = {
 // fetch isn't wired to auto-generation yet) — those stay on postOrder.
 async function startGeneration(
   companyName: string, businessId: string, email: string, userInput: string, sessionId: string,
+  forecast: boolean,
 ): Promise<string | null> {
   if (!businessId) return null
   const result = await postCheckoutGenerate({
-    businessId, companyName, email, userInput, stripeSessionId: sessionId,
+    businessId, companyName, email, userInput, stripeSessionId: sessionId, forecast,
   })
   return result ? `/testi?key=${encodeURIComponent(result.key)}&rid=${encodeURIComponent(result.runId)}` : null
 }
@@ -76,12 +80,12 @@ async function startGeneration(
 // still needs the guard.
 async function fulfil(
   kind: ReportKind, companyName: string, businessId: string, email: string,
-  userInput: string, sessionId: string, orderNote: string,
+  userInput: string, sessionId: string, orderNote: string, forecast: boolean,
 ): Promise<{ outcome: Outcome; reportLink: string | null }> {
   if (!email) return { outcome: 'failed', reportLink: null }
 
   if (kind === 'existing') {
-    const reportLink = await startGeneration(companyName, businessId, email, userInput, sessionId)
+    const reportLink = await startGeneration(companyName, businessId, email, userInput, sessionId, forecast)
     if (reportLink) return { outcome: 'generating', reportLink }
   }
   if (postedSessions.has(sessionId)) return { outcome: 'queued', reportLink: null }
@@ -103,6 +107,7 @@ async function resolveAndPostOrder(sp: Search): Promise<OrderResult> {
     const companyName = session.metadata?.companyName || 'Tuntematon yritys'
     const businessId = session.metadata?.businessId || ''
     const userInput = session.metadata?.userInput || ''
+    const forecast = session.metadata?.forecast === 'true'
     const email =
       session.customer_details?.email ||
       session.customer_email ||
@@ -112,8 +117,12 @@ async function resolveAndPostOrder(sp: Search): Promise<OrderResult> {
     const { outcome, reportLink } = await fulfil(
       kind, companyName, businessId, email, userInput, sessionId,
       `MAKSETTU (Stripe ${sessionId}), tuote: ${kind}, hinta: ${eur(session.amount_total ?? 0)}`,
+      forecast,
     )
-    return { demo: false, companyName, kindLabel: kindLabels[kind], outcome, reportLink }
+    return {
+      demo: false, companyName, kindLabel: kindLabels[kind], outcome, reportLink,
+      awaitingForecast: forecast && outcome === 'generating',
+    }
   }
 
   // --- Demo flow: no Stripe key or explicit ?demo=1 --------------------------
@@ -122,6 +131,7 @@ async function resolveAndPostOrder(sp: Search): Promise<OrderResult> {
   const businessId = param(sp, 'businessId')
   const userInput = param(sp, 'userInput')
   const email = param(sp, 'email')
+  const forecast = param(sp, 'forecast') === '1'
   const q = quote(kind, param(sp, 'share') === '1')
   // `n` (minted once per /api/checkout call, see route.ts) makes this key
   // unique per checkout attempt, not just per company+email — without it, a
@@ -129,12 +139,16 @@ async function resolveAndPostOrder(sp: Search): Promise<OrderResult> {
   // attempt's run (see the 2026-07-10 Turun Tislaamo incident).
   const demoKey = `demo:${kind}:${companyName}:${email}:${param(sp, 'n')}`
 
-  if (!companyName) return { demo: true, companyName, kindLabel: kindLabels[kind], outcome: 'failed', reportLink: null }
+  if (!companyName) return { demo: true, companyName, kindLabel: kindLabels[kind], outcome: 'failed', reportLink: null, awaitingForecast: false }
   const { outcome, reportLink } = await fulfil(
     kind, companyName, businessId, email, userInput, demoKey,
     `KOEMAKSU (ei veloitusta), tuote: ${kind}, hinta: ${eur(q.total)}`,
+    forecast,
   )
-  return { demo: true, companyName, kindLabel: kindLabels[kind], outcome, reportLink }
+  return {
+    demo: true, companyName, kindLabel: kindLabels[kind], outcome, reportLink,
+    awaitingForecast: forecast && outcome === 'generating',
+  }
 }
 
 export default async function KassaValmisPage({
@@ -146,6 +160,7 @@ export default async function KassaValmisPage({
 
   let result: OrderResult = {
     demo: false, companyName: '', kindLabel: '', outcome: 'failed', reportLink: null,
+    awaitingForecast: false,
   }
   let resolved = false
   try {
@@ -194,7 +209,9 @@ export default async function KassaValmisPage({
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-pretty text-[17px] font-light leading-relaxed text-white/75">
               {result.companyName ? `${result.kindLabel} — ${result.companyName}. ` : ''}
-              {result.outcome === 'generating'
+              {result.awaitingForecast
+                ? 'Valitsit ennusteiden tarkistuksen ennen raporttia. Avaa alla oleva linkki, tarkista tai muokkaa liikevaihto- ja EBIT-ennusteet, niin raportti luodaan sen jälkeen. Raportti EI käynnisty ennen kuin vahvistat ennusteet linkin takana.'
+                : result.outcome === 'generating'
                 ? 'Raportin generointi on käynnissä — kestää tyypillisesti 10–20 minuuttia. Lähetämme valmiin raportin sähköpostiisi, ja voit seurata sitä myös tästä sivusta.'
                 : result.outcome === 'queued'
                   ? 'Raportti toimitetaan sähköpostiisi 30–60 minuutissa. Tiliä ei tarvita.'
@@ -205,7 +222,7 @@ export default async function KassaValmisPage({
                 href={result.reportLink}
                 className="mx-auto mt-5 inline-block rounded-full bg-lime px-5 py-2.5 text-sm font-medium text-forest transition-colors hover:brightness-95"
               >
-                Seuraa raporttia tästä →
+                {result.awaitingForecast ? 'Tarkista ennusteet ja luo raportti →' : 'Seuraa raporttia tästä →'}
               </a>
             )}
             {failed && (
@@ -241,7 +258,13 @@ export default async function KassaValmisPage({
                       'Lähetä meille sähköpostia alla olevaan osoitteeseen ja mainitse yrityksen nimi, niin käynnistämme raportin käsin.',
                       'Jos maksoit kortilla, veloitusta ei ole tehty tai se hyvitetään.',
                     ]
-                  : [
+                  : result.awaitingForecast
+                    ? [
+                        'Avaa yllä oleva linkki: näet yrityksen liikevaihto- ja EBIT-ennusteet ja voit muokata niitä omilla näkemyksilläsi — tai jatkaa suoraan meidän ennusteillamme.',
+                        'Kun vahvistat ennusteet, raportin generointi käynnistyy ja kestää tyypillisesti 10–20 minuuttia. Valmis raportti toimitetaan sähköpostiisi.',
+                        'Ennen vahvistusta raporttia ei luoda — muista siis avata linkki. Sama linkki näyttää myös valmiin raportin.',
+                      ]
+                    : [
                       'Analyysimme kokoaa yrityksen tilinpäätöstiedot ja laatii arvonmääritysraportin usealla menetelmällä.',
                       result.outcome === 'generating'
                         ? 'Valmis PDF-raportti toimitetaan sähköpostiisi 10–20 minuutin kuluttua — voit myös seurata edistymistä yllä olevasta linkistä.'

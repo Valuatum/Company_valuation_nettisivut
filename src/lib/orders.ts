@@ -35,6 +35,9 @@ export type CheckoutGeneratePayload = {
   email: string
   userInput?: string
   stripeSessionId: string
+  // When true the paid run stops after the data fetch so the buyer can review/
+  // edit forecasts before the report is written (opt-in at checkout).
+  forecast?: boolean
 }
 
 export type CheckoutGenerateResult = { runId: string; key: string } | null
@@ -60,6 +63,7 @@ export async function postCheckoutGenerate(
         email: payload.email.slice(0, 200),
         user_input: (payload.userInput ?? '').slice(0, 4000),
         stripe_session_id: payload.stripeSessionId.slice(0, 200),
+        mode: payload.forecast ? 'forecast' : 'generate',
         website: '',
       }),
       cache: 'no-store',

@@ -44,6 +44,8 @@ export function BuyBox({ companyId, companyName, businessId, hasFinancials }: Pr
   const [share, setShare] = useState(true)
   const [email, setEmail] = useState('')
   const [userInput, setUserInput] = useState('')
+  // Opt-in (default off): review/edit forecasts before the report is generated.
+  const [wantForecast, setWantForecast] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -66,6 +68,7 @@ export function BuyBox({ companyId, companyName, businessId, hasFinancials }: Pr
           shareData: shareActive,
           customerEmail: email,
           userInput: userInput.trim() || undefined,
+          wantForecast,
         }),
       })
       const data = (await res.json()) as { url?: string; error?: string }
@@ -186,6 +189,26 @@ export function BuyBox({ companyId, companyName, businessId, hasFinancials }: Pr
             className="mt-1.5 w-full rounded-xl border border-mist bg-white px-4 py-3 text-sm text-charcoal outline-none transition-colors placeholder:text-steel focus:border-green"
           />
         </label>
+
+        {kind === 'existing' && (
+          <label className="mt-4 flex cursor-pointer items-start gap-2.5 rounded-xl border border-mist bg-off-white px-3.5 py-3">
+            <input
+              type="checkbox"
+              checked={wantForecast}
+              onChange={(e) => setWantForecast(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-green"
+            />
+            <span className="text-[13px] leading-relaxed text-charcoal-mid">
+              <span className="font-medium text-charcoal">
+                Haluan tarkistaa ennusteet ennen raporttia
+              </span>
+              <br />
+              Maksun jälkeen näet liikevaihto- ja EBIT-ennusteet ja voit muokata niitä
+              omilla näkemyksilläsi. Raportti luodaan vasta kun vahvistat ne. Jätä tyhjäksi,
+              niin raportti syntyy suoraan meidän ennusteillamme.
+            </span>
+          </label>
+        )}
 
         <button
           type="submit"
